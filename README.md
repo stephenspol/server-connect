@@ -1,2 +1,2 @@
 # server-connect
-Connect to latest Minecraft server(13.12) using java
+Connect to latest Minecraft server (V13.12) using java
