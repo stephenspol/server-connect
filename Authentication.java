@@ -1,5 +1,6 @@
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -28,21 +29,33 @@ public class Authentication {
 	public String authenticate() throws IOException
 	{
 		String payload = "{\"agent\":{\"name\":\"Minecraft\",\"version\":1},\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
+		System.out.println(payload);
 		
-		String encodedData = URLEncoder.encode(payload, "UTF-8");
 		URL authServer = new URL("https://sneaky-player.glitch.me/authenticate");//"https://authserver.mojang.com/authenticate");
 		
 		HttpURLConnection conn = (HttpURLConnection) authServer.openConnection();
 		conn.setDoOutput(true);
 		conn.setRequestMethod(method);
 		conn.setRequestProperty("Content-Type", type );
-		conn.setRequestProperty("Content-Length", String.valueOf(encodedData.length()));
+		conn.setRequestProperty("Content-Length", String.valueOf(payload.length()));
 		conn.setUseCaches(false);
+
+		// Send to server
 		OutputStream os = conn.getOutputStream();
-		os.write(encodedData.getBytes());
+		os.write(payload.getBytes());
 		
-		InputStream is = conn.getInputStream();
-		//String Response = is.read();
+		// Read server output
+		BufferedReader in = new BufferedReader(
+             new InputStreamReader(conn.getInputStream()));
+		String inputLine;
+		StringBuffer response = new StringBuffer();
+
+		while ((inputLine = in.readLine()) != null) {
+			response.append(inputLine);
+		}
+		in.close();
+
+		System.out.println(response);
 		
 		return conn.getResponseMessage();
 	}
