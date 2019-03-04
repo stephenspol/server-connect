@@ -30,11 +30,24 @@ public class Main {
 		
 		sc.nextLine();
 		
+		/*
 		System.out.print("Password: ");
-		password = sc.nextLine();
+		password = sc.nextLine();*/
 		//sc.close();
 		
-		Authentication server = new Authentication(username, password);
+		if (console == null)
+		{
+			System.out.println("Couldn't get Console instance");
+		}
+		
+		// Uses a array to store password to ensure security
+		char passArray[] = console.readPassword("Password: ");
+		Authentication server = new Authentication(username, passArray);
+		
+		//char accessToken[] = console.readPassword("Access Token: ");
+		//char clientToken[] = console.readPassword("Client Token: ");
+		
+		//System.out.println(server.validate(accessToken));
 		
 		System.out.println(server.authenticate());
 		/*
