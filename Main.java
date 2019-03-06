@@ -8,9 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Main {
 	
-	/* Protocol states Status | Login | Play
-	 *
-	 */
+	// Protocol states Status | Login | Play
 	public static void main(String[] args) throws IOException {
 		String address;
 		int port;
@@ -20,10 +18,10 @@ public class Main {
 		Scanner sc = new Scanner(System.in);
 		Console console = System.console();
 
-		/*System.out.print("Server Address: ");
+		System.out.print("Server Address: ");
 		address = sc.nextLine();
 		System.out.print("Port: ");
-		port = sc.nextInt();*/
+		port = sc.nextInt();
 
 		System.out.print("Username: ");
 		username = sc.next();
@@ -49,8 +47,8 @@ public class Main {
 		
 		//System.out.println(server.validate(accessToken));
 		
-		System.out.println(server.authenticate());
-		/*
+		//System.out.println(server.authenticate());
+		
 		InetSocketAddress host = new InetSocketAddress(address, port);
 		Socket socket = new Socket();
 		System.out.println("Connecting...");
@@ -148,13 +146,13 @@ public class Main {
 		writeVarInt(output, handshakeMessage.length);
 		output.write(handshakeMessage);
 		System.out.println("Handshake sent");
-		*/
+		
 		// C->S : Login Start
 		/*byte [] bytes = username.getBytes(StandardCharsets.UTF_8);
 	    writeVarInt(output, bytes.length + 1); //packet size
 		output.write(0x00); //packet id
 		output.write(bytes);*/
-		/*ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
 	    DataOutputStream string = new DataOutputStream(buffer);
 	    string.writeByte(0x00); //packet id
@@ -194,8 +192,129 @@ public class Main {
 	    input.readFully(in);  //read json string
 	    json = new String(in);
 
-	    // print out server info
-	    System.out.println(json);*/
+	    System.out.println(json);
+	    
+	    // S->C : Join Game
+	    size = readVarInt(input);
+	    packetId = readVarInt(input);
+
+	    if (packetId == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    length = readVarInt(input); //length of json string
+
+	    if (length == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    if (length == 0) {
+	        throw new IOException("Invalid string length.");
+	    }
+
+	    in = new byte[length];
+	    input.readFully(in);  //read json string
+	    json = new String(in);
+
+	    System.out.println(json);
+	    
+	    // S->C : Server Difficulty (Optional)
+	    
+	    // S->C : Spawn Position
+	    size = readVarInt(input);
+	    packetId = readVarInt(input);
+
+	    if (packetId == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    length = readVarInt(input); //length of json string
+
+	    if (length == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    if (length == 0) {
+	        throw new IOException("Invalid string length.");
+	    }
+
+	    in = new byte[length];
+	    input.readFully(in);  //read json string
+	    json = new String(in);
+
+	    System.out.println(json);
+	    
+	    // S->C : Player Abilities
+	    size = readVarInt(input);
+	    packetId = readVarInt(input);
+
+	    if (packetId == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    length = readVarInt(input); //length of json string
+
+	    if (length == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    if (length == 0) {
+	        throw new IOException("Invalid string length.");
+	    }
+
+	    in = new byte[length];
+	    input.readFully(in);  //read json string
+	    json = new String(in);
+
+	    System.out.println(json);
+	    
+	    // C->S : Client Settings
+	    buffer = new ByteArrayOutputStream();
+
+	    DataOutputStream settings = new DataOutputStream(buffer);
+	    settings.writeByte(0x04); //packet id
+	    writeString(settings, "en_US", StandardCharsets.UTF_8);
+	    settings.writeByte(0x07); // View distance
+	    writeVarInt(settings, 0); // chat mode 0:enabled | 1:commands only | 2:hidden
+	    settings.writeByte(0x01); // colors multiplayer setting
+	    settings.writeByte(0x00); // displaying skin parts
+	    writeVarInt(settings, 0); // Main hand 0:left | 1:right
+	    
+	    userInfo = buffer.toByteArray();
+
+		writeVarInt(output, userInfo.length);
+		output.write(userInfo);
+	    // S->C : Player Position And Look
+		size = readVarInt(input);
+	    packetId = readVarInt(input);
+
+	    if (packetId == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    length = readVarInt(input); //length of json string
+
+	    if (length == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    if (length == 0) {
+	        throw new IOException("Invalid string length.");
+	    }
+
+	    in = new byte[length];
+	    input.readFully(in);  //read json string
+	    json = new String(in);
+
+	    System.out.println(json);
+	    
+	    // C->S : Teleport Confirm
+	    
+	    // C->S : Player Position and Look
+	    
+	    // C->S : Client Status
+	    
+	    // S->C : world data
 	}
 
 	public static byte [] createHandshakeMessage(String host, int port, int state) throws IOException {
