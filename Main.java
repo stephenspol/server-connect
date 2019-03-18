@@ -5,6 +5,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
+import java.util.zip.Inflater;
 
 public class Main {
 	
@@ -12,6 +15,8 @@ public class Main {
 	public static void main(String[] args) throws IOException {
 		String address;
 		int port;
+		
+		int data;
 
 		String username, password;
 
@@ -169,15 +174,56 @@ public class Main {
 
 			// C->S : Encryption Response
 		}
+		
+		// S->C : Set Compression (optional)
+		size = readVarInt(input);
+		packetId = readVarInt(input);
 
+	    if (packetId == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+	    
+	    if (size == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    if (size == 0) {
+	        throw new IOException("Invalid string length.");
+	    }
+	    
+	    data = readVarInt(input);
+	    
+	    System.out.println("Compression Size: " + data);
+	    
+	    // if received set compression packet and is not a negative number, enable compression
+
+		
 		// S->C : Login Success
 		size = readVarInt(input);
+		int uncompressedSize = readVarInt(input); // if 0, data is not compressed
 	    packetId = readVarInt(input);
-
+	    
 	    if (packetId == -1) {
 	        throw new IOException("Premature end of stream.");
 	    }
 
+	    length = readVarInt(input); //length of json string
+	    
+	    if (length == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    if (length == 0) {
+	        throw new IOException("Invalid string length.");
+	    }
+
+	    in = new byte[length];
+	    input.readFully(in);  //read json string
+	    json = new String(in);
+
+	    System.out.println("UUID: " + json);
+	    
+	    
 	    length = readVarInt(input); //length of json string
 
 	    if (length == -1) {
@@ -191,13 +237,64 @@ public class Main {
 	    in = new byte[length];
 	    input.readFully(in);  //read json string
 	    json = new String(in);
-
-	    System.out.println(json);
+	    
+	    System.out.println("Username: " + json);
 	    
 	    // S->C : Join Game
+	    System.out.println("Joined Game!");
 	    size = readVarInt(input);
+	    uncompressedSize = readVarInt(input);
 	    packetId = readVarInt(input);
 
+	    if (packetId == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    if (size == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    if (size == 0) {
+	        throw new IOException("Invalid string length.");
+	    }
+
+	    int EID = input.readInt();
+	    byte gameMode = input.readByte();
+	    int dim = input.readInt();
+	    byte difficulty = input.readByte();
+	    byte maxPlayers = input.readByte();
+	    
+	    length = readVarInt(input);
+	    
+	    if (length == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    if (length == 0) {
+	        throw new IOException("Invalid string length.");
+	    }
+	    
+	    in = new byte[length];
+	    input.readFully(in);  //read json string
+	    String lvlType = new String(in);
+	    
+	    boolean debugInfo = input.readBoolean();
+	    
+	    System.out.println("Entity ID: " + EID);
+	    System.out.println("Game Mode: " + gameMode);
+	    System.out.println("Dimension: " + dim);
+	    System.out.println("Difficulty: " + difficulty);
+	    System.out.println("Max Players: " + maxPlayers);
+	    System.out.println("Level Type: " + lvlType);
+	    System.out.println("Debug Info: " + debugInfo);
+	    
+	    System.out.println();
+	    
+	    // S->C : Plugin Message (Optional)
+	    size = readVarInt(input);
+	    uncompressedSize = readVarInt(input);
+	    packetId = readVarInt(input);
+	    
 	    if (packetId == -1) {
 	        throw new IOException("Premature end of stream.");
 	    }
@@ -211,62 +308,105 @@ public class Main {
 	    if (length == 0) {
 	        throw new IOException("Invalid string length.");
 	    }
-
+	    
 	    in = new byte[length];
 	    input.readFully(in);  //read json string
 	    json = new String(in);
+	    
+	    System.out.println("Identifier: " + json);
+	    
+	    length = readVarInt(input); //length of json string
 
-	    System.out.println(json);
+	    if (length == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+
+	    if (length == 0) {
+	        throw new IOException("Invalid string length.");
+	    }
+	    
+	    in = new byte[length];
+	    input.readFully(in);  //read json string
+	    json = new String(in);
+	    
+	    System.out.println("Data: " + json);
+	    
+	    System.out.println();
 	    
 	    // S->C : Server Difficulty (Optional)
+	    size = readVarInt(input);
+	    uncompressedSize = readVarInt(input);
+	    packetId = readVarInt(input);
+
+	    if (packetId == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
+	    
+	    difficulty = input.readByte();
+	    
+	    System.out.println("Difficulty: " + difficulty);
+	    
+	    System.out.println();
 	    
 	    // S->C : Spawn Position
 	    size = readVarInt(input);
+	    uncompressedSize = readVarInt(input);
 	    packetId = readVarInt(input);
 
 	    if (packetId == -1) {
 	        throw new IOException("Premature end of stream.");
 	    }
 
-	    length = readVarInt(input); //length of json string
-
-	    if (length == -1) {
-	        throw new IOException("Premature end of stream.");
-	    }
-
-	    if (length == 0) {
-	        throw new IOException("Invalid string length.");
-	    }
-
-	    in = new byte[length];
-	    input.readFully(in);  //read json string
-	    json = new String(in);
-
-	    System.out.println(json);
+	    int[] pos = readPos(input);
+	    
+	    System.out.println("X: " + pos[0]);
+	    System.out.println("Y: " + pos[1]);
+	    System.out.println("Z: " + pos[2]);
+	    
+	    System.out.println();
 	    
 	    // S->C : Player Abilities
 	    size = readVarInt(input);
+	    uncompressedSize = readVarInt(input);
 	    packetId = readVarInt(input);
 
 	    if (packetId == -1) {
 	        throw new IOException("Premature end of stream.");
 	    }
+	    
+	    /*Invulnerable	0x01
+		Flying	0x02
+		Allow Flying	0x04
+		Creative Mode (Instant Break)	0x08
+		*/
+	    byte flags = input.readByte();
+	    float flySpeed = input.readFloat();
+	    float FOV = input.readFloat();
+	    
+	    System.out.println("Flag Value: " + flags);
+	    if (getBit(flags, 0)) System.out.println("Invulnerability Enabled");
+	    if (getBit(flags, 1)) System.out.println("Player is flying");
+	    if (getBit(flags, 2)) System.out.println("Flying Enabled");
+	    if (getBit(flags, 3)) System.out.println("Instant Break Enabled");
+	    
+	    System.out.println("Fly Speed: " + flySpeed);
+	    System.out.println("FOV: " + FOV);
+	    
+	    System.out.println();
+	    
+	    // C->S : Plugin Message (Optional) follow up from server plugin messasge
+	    buffer = new ByteArrayOutputStream();
+	    
+	    DataOutputStream message = new DataOutputStream(buffer);
+	    message.writeByte(0x0A); //packet id
+	    writeString(message, "minecraft:brand", StandardCharsets.UTF_8); // identifier
+	    writeString(message, "vanilla", StandardCharsets.UTF_8); // data
+	    
+	    userInfo = buffer.toByteArray();
 
-	    length = readVarInt(input); //length of json string
-
-	    if (length == -1) {
-	        throw new IOException("Premature end of stream.");
-	    }
-
-	    if (length == 0) {
-	        throw new IOException("Invalid string length.");
-	    }
-
-	    in = new byte[length];
-	    input.readFully(in);  //read json string
-	    json = new String(in);
-
-	    System.out.println(json);
+		writeVarInt(output, userInfo.length);
+		output.writeByte(0x00); // uncompressed size
+		output.write(userInfo);
 	    
 	    // C->S : Client Settings
 	    buffer = new ByteArrayOutputStream();
@@ -283,7 +423,9 @@ public class Main {
 	    userInfo = buffer.toByteArray();
 
 		writeVarInt(output, userInfo.length);
+		output.writeByte(0x00); // uncompressed size
 		output.write(userInfo);
+		
 	    // S->C : Player Position And Look
 		size = readVarInt(input);
 	    packetId = readVarInt(input);
@@ -292,29 +434,123 @@ public class Main {
 	        throw new IOException("Premature end of stream.");
 	    }
 
-	    length = readVarInt(input); //length of json string
-
-	    if (length == -1) {
-	        throw new IOException("Premature end of stream.");
-	    }
-
-	    if (length == 0) {
-	        throw new IOException("Invalid string length.");
-	    }
-
-	    in = new byte[length];
-	    input.readFully(in);  //read json string
-	    json = new String(in);
-
-	    System.out.println(json);
+	    double x = input.readDouble();
+	    double y = input.readDouble();
+	    double z = input.readDouble();
+	    
+	    float yaw = input.readFloat();
+	    float pitch = input.readFloat();
+	    
+	    /* If set, value is relative
+	      X	0x01
+		  Y	0x02
+		  Z	0x04
+		  Y_ROT	0x08
+		  X_ROT	0x10*/
+	    flags = input.readByte();
+	    boolean[] isRelative = getBits(flags);
+	    
+	    int teleportID = readVarInt(input);
+	    
+	    System.out.println("X: " + x);
+	    System.out.println("Y: " + y);
+	    System.out.println("Z: " + z);
+	    System.out.println("Yaw: " + yaw);
+	    System.out.println("pitch: " + pitch);
+	    
+	    System.out.println("Flag Value: " + flags);
+	    if (isRelative[0]) System.out.println("X Position is relative");
+	    if (isRelative[1]) System.out.println("Y Position is relative");
+	    if (isRelative[2]) System.out.println("Z Position is relative");
+	    if (isRelative[3]) System.out.println("Y Rotation (Pitch) is relative");
+	    if (isRelative[4]) System.out.println("X Rotation (Yaw) is relative");
+	    
+	    System.out.println("Teleport ID: " + teleportID);
+	    
+	    System.out.println();
 	    
 	    // C->S : Teleport Confirm
+	    buffer = new ByteArrayOutputStream();
+
+	    DataOutputStream telConfirm = new DataOutputStream(buffer);
+	    telConfirm.writeByte(0x00); // packet ID
+	    writeVarInt(telConfirm, teleportID);
+	    
+	    userInfo = buffer.toByteArray();
+
+		writeVarInt(output, userInfo.length);
+		output.writeByte(0x00); // uncompressed size
+		output.write(userInfo);
 	    
 	    // C->S : Player Position and Look
+	    buffer = new ByteArrayOutputStream();
+
+	    DataOutputStream position = new DataOutputStream(buffer);
+	    position.writeByte(0x11); // Packet ID
+	    position.writeDouble(x);
+	    position.writeDouble(y - 1.62);
+	    position.writeDouble(z);
+	    
+	    position.writeFloat(yaw);
+	    position.writeFloat(pitch);
+	    
+	    position.writeBoolean(true); // onGround
+	    
+	    userInfo = buffer.toByteArray();
+
+		writeVarInt(output, userInfo.length);
+		output.writeByte(0x00); // uncompressed size
+		output.write(userInfo);
 	    
 	    // C->S : Client Status
+	    buffer = new ByteArrayOutputStream();
+
+	    DataOutputStream status = new DataOutputStream(buffer);
+	    status.writeByte(0x03); // Packet ID
+	    writeVarInt(status, 0); // 0 = respawn | 1 = statistic menu opened
 	    
-	    // S->C : world data
+	    userInfo = buffer.toByteArray();
+
+		writeVarInt(output, userInfo.length);
+		output.writeByte(0x00); // uncompressed size
+		output.write(userInfo);
+	    
+	    // S->C : The rest of the data
+		size = readVarInt(input);
+	    uncompressedSize = readVarInt(input);
+	    int resultLength;
+	    byte[] result = new byte[uncompressedSize];
+	    byte[] compressedData = new byte[size];
+	    if (uncompressedSize > 0)
+	    {
+	    	input.readFully(compressedData);
+	    	
+	    	//for (byte b: compressedData) System.out.print(b + " ");
+	    	
+	    	Inflater decompresser = new Inflater();
+	        decompresser.setInput(compressedData, 0, size);
+	        try {
+				resultLength = decompresser.inflate(result);
+				
+				//if (resultLength != uncompressedSize) throw new RuntimeException("Uncompression failed! Length not equal");
+			} catch (DataFormatException e) {
+				e.printStackTrace();
+			}
+	        decompresser.end();
+	    }
+	    DataInputStream uncompressedData = new DataInputStream(new ByteArrayInputStream(result));
+	    
+	    packetId = readVarInt(uncompressedData);
+	    
+	    System.out.println("Size: " + size);
+	    System.out.println("Uncompressed Size: " + uncompressedSize);
+	    System.out.print("Packet Id: " );
+	    System.out.format("0x%02X", (byte) packetId);
+	    System.out.println();
+
+	    if (packetId == -1) {
+	        throw new IOException("Premature end of stream.");
+	    }
 	}
 
 	public static byte [] createHandshakeMessage(String host, int port, int state) throws IOException {
@@ -358,5 +594,39 @@ public class Main {
 	        if ((k & 0x80) != 128) break;
 	    }
 	    return i;
+	}
+	
+	public static int[] readPos(DataInputStream in) throws IOException {
+		long val = in.readLong();
+		
+		int x = (int)(val >> 38); // 26 MSBs
+		int y = (int)((val >> 26) & 0xFFF); // 12 bits between them
+		int z = (int)(val << 38 >> 38); // 26 LSBs
+		
+		if (x >= Math.pow(2, 25)) x -= Math.pow(2, 26);
+		if (y >= Math.pow(2, 11)) y -= Math.pow(2, 12);
+		if (z >= Math.pow(2, 25)) z -= Math.pow(2, 26);
+		
+		int[] pos = {x, y, z};	
+		
+		return pos;
+	}
+	
+	public static void writePos(DataOutputStream out, int[] pos) throws IOException {
+		out.writeLong(((pos[0] & 0x3FFFFFF) << 38) | ((pos[1] & 0xFFF) << 26) | (pos[2] & 0x3FFFFFF));
+	}
+	
+	public static boolean getBit(byte num, int pos)
+	{
+		return ((num >> pos) & 1) == 1;
+	}
+	
+	public static boolean[] getBits(byte num)
+	{
+		boolean[] bits = new boolean[7];
+		
+		for (int i = 0; i < bits.length; i++) bits[i] = getBit(num, i);
+		
+		return bits;
 	}
 }
