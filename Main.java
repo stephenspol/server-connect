@@ -19,6 +19,9 @@ public class Main {
 		int data;
 
 		String username, password;
+		
+		boolean compressionEnabled = false;
+		int uncompressedSize = -1;
 
 		Scanner sc = new Scanner(System.in);
 		Console console = System.console();
@@ -67,10 +70,10 @@ public class Main {
 
 		//beginning of Status Ping
 		System.out.println("Attempting handshake..." + host.getAddress());
-		byte [] handshakeMessage = createHandshakeMessage(address, port, 1);
+		byte [] handshakeMessage = Packet.createHandshakeMessage(address, port, 1);
 
 		// C->S : Handshake State=1
-		writeVarInt(output, handshakeMessage.length);
+		Packet.writeVarInt(output, handshakeMessage.length);
 		output.write(handshakeMessage);
 		System.out.println("Handshake sent");
 
@@ -80,30 +83,7 @@ public class Main {
 		System.out.println("Status request sent");
 
 		// S->C : Response
-	    int size = readVarInt(input);
-	    int packetId = readVarInt(input);
-
-	    if (packetId == -1) {
-	        throw new IOException("Premature end of stream.");
-	    }
-
-	    if (packetId != 0x00) { //we want a status response
-	        throw new IOException("Invalid packetID");
-	    }
-	    int length = readVarInt(input); //length of json string
-
-	    if (length == -1) {
-	        throw new IOException("Premature end of stream.");
-	    }
-
-	    if (length == 0) {
-	        throw new IOException("Invalid string length.");
-	    }
-
-	    byte[] in = new byte[length];
-	    input.readFully(in);  //read json string
-	    String json = new String(in);
-
+		String json = (String) Packet.readPacket(input)[0];
 
 	    // C->S : Ping
 	    long now = System.currentTimeMillis();
@@ -176,7 +156,7 @@ public class Main {
 		}
 		
 		// S->C : Set Compression (optional)
-		size = readVarInt(input);
+		/*size = readVarInt(input);
 		packetId = readVarInt(input);
 
 	    if (packetId == -1) {
@@ -196,11 +176,11 @@ public class Main {
 	    System.out.println("Compression Size: " + data);
 	    
 	    // if received set compression packet and is not a negative number, enable compression
-
-		
+	    if (data >= 0) compressionEnabled = true;
+		*/
 		// S->C : Login Success
 		size = readVarInt(input);
-		int uncompressedSize = readVarInt(input); // if 0, data is not compressed
+		if (compressionEnabled) uncompressedSize = readVarInt(input); // if 0, data is not compressed
 	    packetId = readVarInt(input);
 	    
 	    if (packetId == -1) {
@@ -243,7 +223,7 @@ public class Main {
 	    // S->C : Join Game
 	    System.out.println("Joined Game!");
 	    size = readVarInt(input);
-	    uncompressedSize = readVarInt(input);
+	    if (compressionEnabled) uncompressedSize = readVarInt(input);
 	    packetId = readVarInt(input);
 
 	    if (packetId == -1) {
@@ -292,7 +272,7 @@ public class Main {
 	    
 	    // S->C : Plugin Message (Optional)
 	    size = readVarInt(input);
-	    uncompressedSize = readVarInt(input);
+	    if (compressionEnabled) uncompressedSize = readVarInt(input);
 	    packetId = readVarInt(input);
 	    
 	    if (packetId == -1) {
@@ -335,7 +315,7 @@ public class Main {
 	    
 	    // S->C : Server Difficulty (Optional)
 	    size = readVarInt(input);
-	    uncompressedSize = readVarInt(input);
+	    if (compressionEnabled) uncompressedSize = readVarInt(input);
 	    packetId = readVarInt(input);
 
 	    if (packetId == -1) {
@@ -350,7 +330,7 @@ public class Main {
 	    
 	    // S->C : Spawn Position
 	    size = readVarInt(input);
-	    uncompressedSize = readVarInt(input);
+	    if (compressionEnabled) uncompressedSize = readVarInt(input);
 	    packetId = readVarInt(input);
 
 	    if (packetId == -1) {
@@ -367,7 +347,7 @@ public class Main {
 	    
 	    // S->C : Player Abilities
 	    size = readVarInt(input);
-	    uncompressedSize = readVarInt(input);
+	    if (compressionEnabled) uncompressedSize = readVarInt(input);
 	    packetId = readVarInt(input);
 
 	    if (packetId == -1) {
@@ -405,7 +385,7 @@ public class Main {
 	    userInfo = buffer.toByteArray();
 
 		writeVarInt(output, userInfo.length);
-		output.writeByte(0x00); // uncompressed size
+		if (compressionEnabled) output.writeByte(0x00); // uncompressed size
 		output.write(userInfo);
 	    
 	    // C->S : Client Settings
@@ -423,11 +403,12 @@ public class Main {
 	    userInfo = buffer.toByteArray();
 
 		writeVarInt(output, userInfo.length);
-		output.writeByte(0x00); // uncompressed size
+		if (compressionEnabled) output.writeByte(0x00); // uncompressed size
 		output.write(userInfo);
 		
 	    // S->C : Player Position And Look
 		size = readVarInt(input);
+		if (compressionEnabled) uncompressedSize = readVarInt(input);
 	    packetId = readVarInt(input);
 
 	    if (packetId == -1) {
@@ -479,7 +460,7 @@ public class Main {
 	    userInfo = buffer.toByteArray();
 
 		writeVarInt(output, userInfo.length);
-		output.writeByte(0x00); // uncompressed size
+		if (compressionEnabled) output.writeByte(0x00); // uncompressed size
 		output.write(userInfo);
 	    
 	    // C->S : Player Position and Look
@@ -499,7 +480,7 @@ public class Main {
 	    userInfo = buffer.toByteArray();
 
 		writeVarInt(output, userInfo.length);
-		output.writeByte(0x00); // uncompressed size
+		if (compressionEnabled) output.writeByte(0x00); // uncompressed size
 		output.write(userInfo);
 	    
 	    // C->S : Client Status
@@ -512,121 +493,28 @@ public class Main {
 	    userInfo = buffer.toByteArray();
 
 		writeVarInt(output, userInfo.length);
-		output.writeByte(0x00); // uncompressed size
+		if (compressionEnabled) output.writeByte(0x00); // uncompressed size
 		output.write(userInfo);
 	    
 	    // S->C : The rest of the data
 		size = readVarInt(input);
-	    uncompressedSize = readVarInt(input);
-	    int resultLength;
-	    byte[] result = new byte[uncompressedSize];
-	    byte[] compressedData = new byte[size];
-	    if (uncompressedSize > 0)
+		if (compressionEnabled) uncompressedSize = readVarInt(input);
+	    
+	    if (compressionEnabled && uncompressedSize >= 0)
 	    {
-	    	input.readFully(compressedData);
 	    	
-	    	//for (byte b: compressedData) System.out.print(b + " ");
+	    }
+	    
+	    else
+	    {
+	    	packetId = readVarInt(input);
 	    	
-	    	Inflater decompresser = new Inflater();
-	        decompresser.setInput(compressedData, 0, size);
-	        try {
-				resultLength = decompresser.inflate(result);
-				
-				//if (resultLength != uncompressedSize) throw new RuntimeException("Uncompression failed! Length not equal");
-			} catch (DataFormatException e) {
-				e.printStackTrace();
-			}
-	        decompresser.end();
+	    	System.out.println("Size: " + size);
+		    System.out.format("Packet Id: 0x%02X%n", (byte) packetId);
+
+		    if (packetId == -1) {
+		        throw new IOException("Premature end of stream.");
+		    }
 	    }
-	    DataInputStream uncompressedData = new DataInputStream(new ByteArrayInputStream(result));
-	    
-	    packetId = readVarInt(uncompressedData);
-	    
-	    System.out.println("Size: " + size);
-	    System.out.println("Uncompressed Size: " + uncompressedSize);
-	    System.out.print("Packet Id: " );
-	    System.out.format("0x%02X", (byte) packetId);
-	    System.out.println();
-
-	    if (packetId == -1) {
-	        throw new IOException("Premature end of stream.");
-	    }
-	}
-
-	public static byte [] createHandshakeMessage(String host, int port, int state) throws IOException {
-	    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
-	    DataOutputStream handshake = new DataOutputStream(buffer);
-	    handshake.writeByte(0x00); //packet id for handshake
-	    writeVarInt(handshake, (state == 1)? 4 : 404); //status version = 4, minecraft version = 404(1.13.2)
-	    writeString(handshake, host, StandardCharsets.UTF_8);
-	    handshake.writeShort(port); //port
-	    writeVarInt(handshake, state); //state (1 for status, 2 for login)
-
-	    return buffer.toByteArray();
-	}
-
-	public static void writeString(DataOutputStream out, String string, Charset charset) throws IOException {
-	    byte [] bytes = string.getBytes(charset);
-	    writeVarInt(out, bytes.length);
-	    out.write(bytes);
-	}
-
-	public static void writeVarInt(DataOutputStream out, int paramInt) throws IOException {
-	    while (true) {
-	        if ((paramInt & 0xFFFFFF80) == 0) {
-	          out.writeByte(paramInt);
-	          return;
-	        }
-
-	        out.writeByte(paramInt & 0x7F | 0x80);
-	        paramInt >>>= 7;
-	    }
-	}
-
-	public static int readVarInt(DataInputStream in) throws IOException {
-	    int i = 0;
-	    int j = 0;
-	    while (true) {
-	        int k = in.readByte();
-	        i |= (k & 0x7F) << j++ * 7;
-	        if (j > 5) throw new RuntimeException("VarInt too big");
-	        if ((k & 0x80) != 128) break;
-	    }
-	    return i;
-	}
-	
-	public static int[] readPos(DataInputStream in) throws IOException {
-		long val = in.readLong();
-		
-		int x = (int)(val >> 38); // 26 MSBs
-		int y = (int)((val >> 26) & 0xFFF); // 12 bits between them
-		int z = (int)(val << 38 >> 38); // 26 LSBs
-		
-		if (x >= Math.pow(2, 25)) x -= Math.pow(2, 26);
-		if (y >= Math.pow(2, 11)) y -= Math.pow(2, 12);
-		if (z >= Math.pow(2, 25)) z -= Math.pow(2, 26);
-		
-		int[] pos = {x, y, z};	
-		
-		return pos;
-	}
-	
-	public static void writePos(DataOutputStream out, int[] pos) throws IOException {
-		out.writeLong(((pos[0] & 0x3FFFFFF) << 38) | ((pos[1] & 0xFFF) << 26) | (pos[2] & 0x3FFFFFF));
-	}
-	
-	public static boolean getBit(byte num, int pos)
-	{
-		return ((num >> pos) & 1) == 1;
-	}
-	
-	public static boolean[] getBits(byte num)
-	{
-		boolean[] bits = new boolean[7];
-		
-		for (int i = 0; i < bits.length; i++) bits[i] = getBit(num, i);
-		
-		return bits;
 	}
 }
