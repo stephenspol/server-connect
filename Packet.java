@@ -25,7 +25,7 @@ public class Packet
 	public static byte state = 1;
 	public static int compressionThreshold = -1;
 	
-	public static Object[] readPacket(DataInputStream input) throws IOException
+	public static Object readPacket(DataInputStream input) throws IOException
 	{
 		DataInputStream payloadStream;
 		Object[] payloadArray = {};
@@ -55,35 +55,100 @@ public class Packet
 				switch (packetId)
 				{
 					case 0:
-						payloadArray[0] = response(input);
-						break;
+						return response(input);
 					case 1:
-						
-						break;
+						return input.readLong();
 					default:
 						throw new RuntimeException(packetId + " is a Invalid Packet ID");
 				}
-				break;
 			case 2:
 				switch (packetId)
 				{
-				
+				case 0:
+					return readString(input);
+				// returns {String, byte[], byte[]}
+				case 1:
+					return encryptionRequest(input);
+				// returns {String, String}
+				case 2:
+					return loginSuccess(input);
+				// returns {int}
+				case 3:
+					compressionThreshold = readVarInt(input);
+					return compressionThreshold;
+				// returns {int, String, String}
+				case 4:
+					return loginPluginRequest(input);
+				default:
+					throw new RuntimeException(packetId + " is a Invalid Packet ID");
 				}
-				break;
 			case 3:
 				switch (packetId)
 				{
-				
+					default:
+						throw new RuntimeException(packetId + " is a Invalid Packet ID");
 				}
-				break;
+			default:
+				throw new RuntimeException(state + " is a Invalid state");
 		}
-		
-		return payloadArray;
 	}
 	
 	public static String response(DataInputStream input) throws IOException
 	{
 	    return readString(input);
+	}
+	
+	public static Object encryptionRequest(DataInputStream input) throws IOException
+	{
+		Object[] payload = new Object[3];
+		
+		// Server ID
+		payload[0] = readString(input);
+		
+		// Public Key Length
+		byte[] publicKey = new byte[readVarInt(input)];
+		
+		// Public Key
+		input.readFully(publicKey);
+		payload[1] = publicKey;
+		
+		// Verify Token Length
+		byte[] verifyToken = new byte[readVarInt(input)];
+		
+		// Verify Token
+		input.readFully(verifyToken);
+		payload[2] = verifyToken;
+		
+		return payload;
+	}
+	
+	public static Object loginSuccess(DataInputStream input) throws IOException
+	{
+		Object[] payload = new Object[2];
+		
+		// UUID
+		payload[0] = readString(input);
+		
+		// Username
+		payload[1] = readString(input);
+		
+		return payload;
+	}
+	
+	public static Object loginPluginRequest(DataInputStream input) throws IOException
+	{
+		Object[] payload = new Object[3];
+		
+		// Message ID
+		payload[0] = readVarInt(input);
+		
+		// Channel
+		payload[1] = readString(input);
+		
+		// Data (length is inferred)
+		payload[2] = readString(input);
+		
+		return payload;
 	}
 	
 	public static DataInputStream decompressZlib(DataInputStream input, int size, int uncompressedSize) throws IOException
