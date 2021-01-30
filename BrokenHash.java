@@ -9,12 +9,16 @@ import java.nio.charset.StandardCharsets;
  * hex digest. Tested and confirmed to match vanilla.
  */
 public class BrokenHash {
+
+	private BrokenHash()  { }
+
 	public static String hash(String str) {
 		try {
 			byte[] digest = digest(str, "SHA-1");
 			return new BigInteger(digest).toString(16);
 		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
+			e.printStackTrace();
+			return null;
 		}
 	}
 
