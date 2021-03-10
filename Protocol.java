@@ -1,12 +1,60 @@
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class Protocol {
+public final class Protocol {
+
+	private static final Logger log = Logger.getLogger(Protocol.class.getName());
+    private static final ConsoleHandler consoleHandler = new ConsoleHandler();
+
+	static {
+		log.setUseParentHandlers(false);
+		log.addHandler(consoleHandler);
+
+		log.setLevel(Level.FINER);
+		consoleHandler.setLevel(Level.FINER);
+	}
     
     private Protocol() {}
 
-    public static byte [] createHandshakeMessage(String host, int port, int state) throws IOException {
+	// Packet ID 0x24 | S->C
+	public static void joinGame(DataInputStream input) throws IOException {
+			int EID = input.readInt();
+			boolean isHardcore = input.readBoolean();
+			int gameMode = input.readUnsignedByte();
+			byte prevGameMode = input.readByte();
+
+			int worldCount = readVarInt(input);
+
+			String[] worldNames = new String[worldCount];
+
+			for (int i = 0; i < worldNames.length; i++)
+			{
+				worldNames[i] = readString(input);
+			}
+
+			int dim = input.readInt();
+			byte difficulty = input.readByte();
+			byte maxPlayers = input.readByte();
+			
+			
+			String lvlType = readString(input);
+			
+			boolean debugInfo = input.readBoolean();
+			
+			log.log(Level.FINE, "Entity ID: {0}", EID);
+			log.log(Level.FINE, "Game Mode: {0}", gameMode);
+			log.log(Level.FINE, "Dimension: {0}", dim);
+			log.log(Level.FINE, "Difficulty: {0}", difficulty);
+			log.log(Level.FINE, "Max Players: {0}", maxPlayers);
+			log.log(Level.FINE, "Level Type: {0}", lvlType);
+			log.log(Level.FINE, "Debug Info: {0}\n", debugInfo);
+	}
+
+    public static byte[] createHandshakeMessage(String host, int port, int state) throws IOException {
 	    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
 	    DataOutputStream handshake = new DataOutputStream(buffer);
@@ -23,6 +71,23 @@ public class Protocol {
 	    byte [] bytes = string.getBytes(charset);
 	    writeVarInt(out, bytes.length);
 	    out.write(bytes);
+	}
+
+	public static String readString(DataInputStream in) throws IOException {
+		int length = readVarInt(in);
+
+		if (length == -1) {
+			throw new IOException(Server.PREMATURE);
+		}
+
+		else if (length == 0) {
+			throw new IOException(Server.INVALID_LENGTH);
+		}
+
+		byte[] input = new byte[length];
+		in.readFully(input);  //read json string
+
+		return new String(input);
 	}
 
 	public static void writeVarInt(DataOutputStream out, int paramInt) throws IOException {

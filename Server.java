@@ -75,19 +75,8 @@ public class Server {
             else if (packetId != 0x00) { //we want a status response
                 log.severe(INVALID_PACKET);
             }
-            int length = Protocol.readVarInt(input); //length of json string
-
-            if (length == -1) {
-                log.severe(PREMATURE);
-            }
-
-            else if (length == 0) {
-                log.severe(INVALID_LENGTH);
-            }
-
-            byte[] in = new byte[length];
-            input.readFully(in);  //read json string
-            String json = new String(in);
+			
+            String json = Protocol.readString(input);
 
             // C->S : Ping
             long now = System.currentTimeMillis();
@@ -197,6 +186,7 @@ public class Server {
 			int size = Protocol.readVarInt(input);
 			int packetId = Protocol.readVarInt(input);
 
+			// Set Compression ID == 3
 			if (packetId == 3) {
 				
 				if (size == -1) {
@@ -219,39 +209,18 @@ public class Server {
 
 			
 			// S->C : Login Success
-			int length = Protocol.readVarInt(input); //length of json string
+			byte[] UUID = new byte[16];
+			input.readFully(UUID);
+
+			log.log(Level.INFO, "Player UUID: {0}", UUID);
 			
-			if (length == -1) {
-				log.severe(PREMATURE);
-			}
-
-			if (length == 0) {
-				log.severe(INVALID_LENGTH);
-			}
-
-			byte[] in = new byte[length];
-			input.readFully(in);  //read json string
-			String json = new String(in);
-
-			log.log(Level.INFO, "Player UUID: {0}", json);
-			
-			length = Protocol.readVarInt(input); //length of json string
-
-			if (length == -1) {
-				log.severe(PREMATURE);
-			}
-
-			if (length == 0) {
-				log.severe(INVALID_LENGTH);
-			}
-
-			in = new byte[length];
-			input.readFully(in);  //read json string
-			json = new String(in);
+			String json = Protocol.readString(input);
 			
 			log.log(Level.INFO, "Name: {0}\n", json);
 
             log.info("Login Complete!\n");
+
+			// <-------------- Start Play Mode ---------------->
 			
 			// S->C : Join Game
 			log.info("Joined Game!\n");
@@ -270,35 +239,7 @@ public class Server {
 				log.severe(INVALID_LENGTH);
 			}
 
-			int EID = input.readInt();
-			byte gameMode = input.readByte();
-			int dim = input.readInt();
-			byte difficulty = input.readByte();
-			byte maxPlayers = input.readByte();
-			
-			length = Protocol.readVarInt(input);
-			
-			if (length == -1) {
-				log.severe(PREMATURE);
-			}
-
-			if (length == 0) {
-				log.severe(INVALID_LENGTH);
-			}
-			
-			in = new byte[length];
-			input.readFully(in);  //read json string
-			String lvlType = new String(in);
-			
-			boolean debugInfo = input.readBoolean();
-			
-			log.log(Level.FINE, "Entity ID: {0}", EID);
-			log.log(Level.FINE, "Game Mode: {0}", gameMode);
-			log.log(Level.FINE, "Dimension: {0}", dim);
-			log.log(Level.FINE, "Difficulty: {0}", difficulty);
-			log.log(Level.FINE, "Max Players: {0}", maxPlayers);
-			log.log(Level.FINE, "Level Type: {0}", lvlType);
-			log.log(Level.FINE, "Debug Info: {0}\n", debugInfo);
+			Protocol.joinGame(input);
 			
 			// S->C : Plugin Message (Optional)
 			size = Protocol.readVarInt(input);
@@ -308,35 +249,11 @@ public class Server {
 				log.severe(PREMATURE);
 			}
 
-			length = Protocol.readVarInt(input); //length of json string
-
-			if (length == -1) {
-				log.severe(PREMATURE);
-			}
-
-			if (length == 0) {
-				log.severe(INVALID_LENGTH);
-			}
-			
-			in = new byte[length];
-			input.readFully(in);  //read json string
-			json = new String(in);
+			json = Protocol.readString(input);
 			
 			log.log(Level.FINE, "Identifier: {0}", json);
 			
-			length = Protocol.readVarInt(input); //length of json string
-
-			if (length == -1) {
-				log.severe(PREMATURE);
-			}
-
-			if (length == 0) {
-				log.severe(INVALID_LENGTH);
-			}
-			
-			in = new byte[length];
-			input.readFully(in);  //read json string
-			json = new String(in);
+			json = Protocol.readString(input);
 			
 			log.log(Level.FINE, "Data: {0}\n", json);
 			
@@ -348,7 +265,7 @@ public class Server {
 				log.severe(PREMATURE);
 			}
 			
-			difficulty = input.readByte();
+			byte difficulty = input.readByte();
 			
 			log.log(Level.FINE, "Server Difficulty: {0}\n", difficulty);
 			
