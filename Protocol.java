@@ -5,6 +5,8 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import NBT.CompoundTag;
+
 public final class Protocol {
 
 	private static final Logger log = Logger.getLogger(Protocol.class.getName());
@@ -130,6 +132,13 @@ public final class Protocol {
 	
 	public static void writePos(DataOutputStream out, int[] pos) throws IOException {
 		out.writeLong(((pos[0] & 0x3FFFFFF) << 38) | ((pos[1] & 0xFFF) << 26) | (pos[2] & 0x3FFFFFF));
+	}
+
+	// WIP
+	public static CompoundTag readNBT(DataInputStream in) throws IOException {
+		CompoundTag nbt;
+
+		return nbt;
 	}
 
 }
