@@ -37,18 +37,4 @@ public class Main {
 		
 		server.connect(3000);
 	}
-	
-	public static boolean getBit(byte num, int pos)
-	{
-		return ((num >> pos) & 1) == 1;
-	}
-	
-	public static boolean[] getBits(byte num)
-	{
-		boolean[] bits = new boolean[7];
-		
-		for (int i = 0; i < bits.length; i++) bits[i] = getBit(num, i);
-		
-		return bits;
-	}
 }

@@ -48,14 +48,14 @@ public class Server {
             socket.connect(host, timeout); // 3000 is standard for timeout
             log.info("Connection to server successful!\n");
 
-            DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-            DataInputStream input = new DataInputStream(socket.getInputStream());
+            MinecraftOutputStream output = new MinecraftOutputStream(socket.getOutputStream());
+            MinecraftInputStream input = new MinecraftInputStream(socket.getInputStream());
 
             log.log(Level.FINE, "Attempting handshake with {0}...", host.getAddress());
             byte[] handshakeMessage = Protocol.createHandshakeMessage(address, port, 1);
 
             // C->S : Handshake State=1
-            Protocol.writeVarInt(output, handshakeMessage.length);
+            output.writeVarInt(handshakeMessage.length);
             output.write(handshakeMessage);
             log.fine("Handshake sent\n");
 
@@ -65,8 +65,8 @@ public class Server {
             log.fine("Status request sent\n");
 
             // S->C : Response
-            int size = Protocol.readVarInt(input);
-            int packetId = Protocol.readVarInt(input);
+            int size = input.readVarInt();
+            int packetId = input.readVarInt();
 
             if (packetId == -1) {
                 log.severe(PREMATURE);
@@ -76,7 +76,7 @@ public class Server {
                 log.severe(INVALID_PACKET);
             }
 			
-            String json = Protocol.readString(input);
+            String json = input.readString();
 
             // C->S : Ping
             long now = System.currentTimeMillis();
@@ -86,8 +86,8 @@ public class Server {
             log.fine("Pinging server...");
 
             // S->C : Pong
-            Protocol.readVarInt(input);
-            packetId = Protocol.readVarInt(input);
+            input.readVarInt();
+            packetId = input.readVarInt();
 
             if (packetId == -1) {
                 log.severe(PREMATURE);
@@ -152,27 +152,27 @@ public class Server {
 			socket.connect(host, timeout);
 			log.info("Connection Completed!\n");
 
-			DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-			DataInputStream input = new DataInputStream(socket.getInputStream());
+			MinecraftOutputStream output = new MinecraftOutputStream(socket.getOutputStream());
+			MinecraftInputStream input = new MinecraftInputStream(socket.getInputStream());
 
 			log.log(Level.FINE, "Attempting handshake with {0}...", host.getAddress());
 			byte[] handshakeMessage = Protocol.createHandshakeMessage(address, port, 2);
 
 			// C->S : Handshake State=2
-			Protocol.writeVarInt(output, handshakeMessage.length);
+			output.writeVarInt(handshakeMessage.length);
 			output.write(handshakeMessage);
 			log.fine("Handshake sent\n");
 			
 			// C->S : Login Start
 			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
-			DataOutputStream string = new DataOutputStream(buffer);
+			MinecraftOutputStream string = new MinecraftOutputStream(buffer);
 			string.writeByte(0x00); //packet id
-			Protocol.writeString(string, name, StandardCharsets.UTF_8);
+			string.writeString(name, StandardCharsets.UTF_8);
 
 			byte[] userInfo = buffer.toByteArray();
 
-			Protocol.writeVarInt(output, userInfo.length);
+			output.writeVarInt(userInfo.length);
 			output.write(userInfo);
 
 			if (!address.equals("127.0.0.1"))
@@ -183,8 +183,8 @@ public class Server {
 			}
 			
 			// S->C : Set Compression (optional)
-			int size = Protocol.readVarInt(input);
-			int packetId = Protocol.readVarInt(input);
+			int size = input.readVarInt();
+			int packetId = input.readVarInt();
 
 			// Set Compression ID == 3
 			if (packetId == 3) {
@@ -197,14 +197,14 @@ public class Server {
 					log.severe(INVALID_LENGTH);
 				}
 				
-				int data = Protocol.readVarInt(input);
+				int data = input.readVarInt();
 				
 				log.log(Level.FINE, "Compression size: {0}", data);
 				
 				// if received set compression packet and is not a negative number, enable compression
 
-				size = Protocol.readVarInt(input);
-				packetId = Protocol.readVarInt(input);
+				size = input.readVarInt();
+				packetId = input.readVarInt();
 			}
 
 			
@@ -214,7 +214,7 @@ public class Server {
 
 			log.log(Level.INFO, "Player UUID: {0}", UUID);
 			
-			String json = Protocol.readString(input);
+			String json = input.readString();
 			
 			log.log(Level.INFO, "Name: {0}\n", json);
 
@@ -224,8 +224,8 @@ public class Server {
 			
 			// S->C : Join Game
 			log.info("Joined Game!\n");
-			size = Protocol.readVarInt(input);
-			packetId = Protocol.readVarInt(input);
+			size = input.readVarInt();
+			packetId = input.readVarInt();
 
 			if (packetId == -1) {
 				log.severe(PREMATURE);
@@ -242,42 +242,34 @@ public class Server {
 			Protocol.joinGame(input);
 			
 			// S->C : Plugin Message (Optional)
-			size = Protocol.readVarInt(input);
-			packetId = Protocol.readVarInt(input);
+			size = input.readVarInt();
+			packetId = input.readVarInt();
 			
 			if (packetId == -1) {
 				log.severe(PREMATURE);
 			}
 
-			json = Protocol.readString(input);
-			
-			log.log(Level.FINE, "Identifier: {0}", json);
-			
-			json = Protocol.readString(input);
-			
-			log.log(Level.FINE, "Data: {0}\n", json);
+			Protocol.pluginMessage(input);
 			
 			// S->C : Server Difficulty (Optional)
-			size = Protocol.readVarInt(input);
-			packetId = Protocol.readVarInt(input);
+			size = input.readVarInt();
+			packetId = input.readVarInt();
 
 			if (packetId == -1) {
 				log.severe(PREMATURE);
 			}
 			
-			byte difficulty = input.readByte();
-			
-			log.log(Level.FINE, "Server Difficulty: {0}\n", difficulty);
+			Protocol.serverDifficulty(input);
 			
 			// S->C : Spawn Position
-			size = Protocol.readVarInt(input);
-			packetId = Protocol.readVarInt(input);
+			size = input.readVarInt();
+			packetId = input.readVarInt();
 
 			if (packetId == -1) {
 				log.severe(PREMATURE);
 			}
 
-			int[] pos = Protocol.readPos(input);
+			int[] pos = input.readPos();
 			
 			log.fine("Spawn Position\n");
 
@@ -286,8 +278,8 @@ public class Server {
 			log.log(Level.FINE, "Z: {0}\n", pos[2]);
 			
 			// S->C : Player Abilities
-			size = Protocol.readVarInt(input);
-			packetId = Protocol.readVarInt(input);
+			size = input.readVarInt();
+			packetId = input.readVarInt();
 
 			if (packetId == -1) {
 				log.severe(PREMATURE);
@@ -303,10 +295,10 @@ public class Server {
 			float FOV = input.readFloat();
 			
 			log.log(Level.FINE, "Flag Value: {0}", flags);
-			if (Main.getBit(flags, 0)) log.fine("Invulnerability Enabled");
-			if (Main.getBit(flags, 1)) log.fine("Player is flying");
-			if (Main.getBit(flags, 2)) log.fine("Flying Enabled");
-			if (Main.getBit(flags, 3)) log.fine("Instant Break Enabled");
+			if (getBit(flags, 0)) log.fine("Invulnerability Enabled");
+			if (getBit(flags, 1)) log.fine("Player is flying");
+			if (getBit(flags, 2)) log.fine("Flying Enabled");
+			if (getBit(flags, 3)) log.fine("Instant Break Enabled");
 			
 			log.log(Level.FINE, "Fly Speed: {0}", flySpeed);
 			log.log(Level.FINE, "FOV: {0}\n", FOV);
@@ -314,38 +306,38 @@ public class Server {
 			// C->S : Plugin Message (Optional) follow up from server plugin messasge
 			buffer = new ByteArrayOutputStream();
 			
-			DataOutputStream message = new DataOutputStream(buffer);
+			MinecraftOutputStream message = new MinecraftOutputStream(buffer);
 			message.writeByte(0x0A); //packet id
-			Protocol.writeString(message, "minecraft:brand", StandardCharsets.UTF_8); // identifier
-			Protocol.writeString(message, "vanilla", StandardCharsets.UTF_8); // data
+			message.writeString("minecraft:brand", StandardCharsets.UTF_8); // identifier
+			message.writeString("vanilla", StandardCharsets.UTF_8); // data
 			
 			userInfo = buffer.toByteArray();
 
-			Protocol.writeVarInt(output, userInfo.length);
+			output.writeVarInt(userInfo.length);
 			output.writeByte(0x00); // uncompressed size
 			output.write(userInfo);
 			
 			// C->S : Client Settings
 			buffer = new ByteArrayOutputStream();
 
-			DataOutputStream settings = new DataOutputStream(buffer);
+			MinecraftOutputStream settings = new MinecraftOutputStream(buffer);
 			settings.writeByte(0x04); //packet id
-			Protocol.writeString(settings, "en_US", StandardCharsets.UTF_8);
+			settings.writeString("en_US", StandardCharsets.UTF_8);
 			settings.writeByte(0x07); // View distance
-			Protocol.writeVarInt(settings, 0); // chat mode 0:enabled | 1:commands only | 2:hidden
+			settings.writeVarInt(0); // chat mode 0:enabled | 1:commands only | 2:hidden
 			settings.writeByte(0x01); // colors multiplayer setting
 			settings.writeByte(0x00); // displaying skin parts
-			Protocol.writeVarInt(settings, 0); // Main hand 0:left | 1:right
+			settings.writeVarInt(0); // Main hand 0:left | 1:right
 			
 			userInfo = buffer.toByteArray();
 
-			Protocol.writeVarInt(output, userInfo.length);
+			output.writeVarInt(userInfo.length);
 			output.writeByte(0x00); // uncompressed size
 			output.write(userInfo);
 			
 			// S->C : Player Position And Look
-			size = Protocol.readVarInt(input);
-			packetId = Protocol.readVarInt(input);
+			size = input.readVarInt();
+			packetId = input.readVarInt();
 
 			if (packetId == -1) {
 				log.severe(PREMATURE);
@@ -365,9 +357,9 @@ public class Server {
 			Y_ROT	0x08
 			X_ROT	0x10*/
 			flags = input.readByte();
-			boolean[] isRelative = Main.getBits(flags);
+			boolean[] isRelative = getBits(flags);
 			
-			int teleportID = Protocol.readVarInt(input);
+			int teleportID = input.readVarInt();
 
 			log.fine("Player Position and Look\n");
 			
@@ -389,20 +381,20 @@ public class Server {
 			// C->S : Teleport Confirm
 			buffer = new ByteArrayOutputStream();
 
-			DataOutputStream telConfirm = new DataOutputStream(buffer);
+			MinecraftOutputStream telConfirm = new MinecraftOutputStream(buffer);
 			telConfirm.writeByte(0x00); // packet ID
-			Protocol.writeVarInt(telConfirm, teleportID);
+			telConfirm.writeVarInt(teleportID);
 			
 			userInfo = buffer.toByteArray();
 
-			Protocol.writeVarInt(output, userInfo.length);
+			output.writeVarInt(userInfo.length);
 			output.writeByte(0x00); // uncompressed size
 			output.write(userInfo);
 			
 			// C->S : Player Position and Look
 			buffer = new ByteArrayOutputStream();
 
-			DataOutputStream position = new DataOutputStream(buffer);
+			MinecraftOutputStream position = new MinecraftOutputStream(buffer);
 			position.writeByte(0x11); // Packet ID
 			position.writeDouble(x);
 			position.writeDouble(y - 1.62);
@@ -415,20 +407,20 @@ public class Server {
 			
 			userInfo = buffer.toByteArray();
 
-			Protocol.writeVarInt(output, userInfo.length);
+			output.writeVarInt(userInfo.length);
 			output.writeByte(0x00); // uncompressed size
 			output.write(userInfo);
 			
 			// C->S : Client Status
 			buffer = new ByteArrayOutputStream();
 
-			DataOutputStream status = new DataOutputStream(buffer);
+			MinecraftOutputStream status = new MinecraftOutputStream(buffer);
 			status.writeByte(0x03); // Packet ID
-			Protocol.writeVarInt(status, 0); // 0 = respawn | 1 = statistic menu opened
+			status.writeVarInt(0); // 0 = respawn | 1 = statistic menu opened
 			
 			userInfo = buffer.toByteArray();
 
-			Protocol.writeVarInt(output, userInfo.length);
+			output.writeVarInt(userInfo.length);
 			output.writeByte(0x00); // uncompressed size
 			output.write(userInfo);
 			
@@ -471,4 +463,18 @@ public class Server {
 		}
 
     }
+
+	public static boolean getBit(byte num, int pos)
+	{
+		return ((num >> pos) & 1) == 1;
+	}
+	
+	public static boolean[] getBits(byte num)
+	{
+		boolean[] bits = new boolean[7];
+		
+		for (int i = 0; i < bits.length; i++) bits[i] = getBit(num, i);
+		
+		return bits;
+	}
 }
