@@ -1,3 +1,5 @@
+package networking.protocol;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.ConsoleHandler;
@@ -5,6 +7,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import NBT.Tag;
+import networking.stream.*;
+import networking.Server;
 
 public final class Protocol {
 
@@ -88,6 +92,38 @@ public final class Protocol {
 			log.log(Level.FINE, "Enable Respawn Screen: {0}", enableRespawnScr);
 			log.log(Level.FINE, "Is Debug Enabled: {0}", isDebug);
 			log.log(Level.FINE, "Is a Flat World: {0}\n", isFlat);
+	}
+
+	// Packet ID 0x30 | S->C
+	public static void playerAbilities(MinecraftInputStream in) throws IOException {
+		/*Invulnerable	0x01
+			Flying	0x02
+			Allow Flying	0x04
+			Creative Mode (Instant Break)	0x08
+			*/
+			byte flags = in.readByte();
+			float flySpeed = in.readFloat();
+			float FOV = in.readFloat();
+			
+			log.log(Level.FINE, "Flag Value: {0}", flags);
+			if (Server.getBit(flags, 0)) log.fine("Invulnerability Enabled");
+			if (Server.getBit(flags, 1)) log.fine("Player is flying");
+			if (Server.getBit(flags, 2)) log.fine("Flying Enabled");
+			if (Server.getBit(flags, 3)) log.fine("Instant Break Enabled");
+			
+			log.log(Level.FINE, "Fly Speed: {0}", flySpeed);
+			log.log(Level.FINE, "FOV: {0}\n", FOV);
+	}
+
+	// Packet ID 0x42 | S->C
+	public static void spawnPostion(MinecraftInputStream in) throws IOException {
+		int[] pos = in.readPos();
+			
+		log.fine("Spawn Position\n");
+
+		log.log(Level.FINE, "X: {0}", pos[0]);
+		log.log(Level.FINE, "Y: {0}", pos[1]);
+		log.log(Level.FINE, "Z: {0}\n", pos[2]);
 	}
 
     public static byte[] createHandshakeMessage(String host, int port, int state) throws IOException {

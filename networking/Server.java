@@ -1,3 +1,5 @@
+package networking;
+
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.ConsoleHandler;
@@ -8,6 +10,9 @@ import java.util.zip.Inflater;
 import java.io.*;
 import java.net.*;
 
+import networking.stream.*;
+import networking.protocol.*;
+import main.Main;
 
 public class Server {
 
@@ -269,13 +274,7 @@ public class Server {
 				log.severe(PREMATURE);
 			}
 
-			int[] pos = input.readPos();
-			
-			log.fine("Spawn Position\n");
-
-			log.log(Level.FINE, "X: {0}", pos[0]);
-			log.log(Level.FINE, "Y: {0}", pos[1]);
-			log.log(Level.FINE, "Z: {0}\n", pos[2]);
+			Protocol.spawnPostion(input);
 			
 			// S->C : Player Abilities
 			size = input.readVarInt();
@@ -285,23 +284,7 @@ public class Server {
 				log.severe(PREMATURE);
 			}
 			
-			/*Invulnerable	0x01
-			Flying	0x02
-			Allow Flying	0x04
-			Creative Mode (Instant Break)	0x08
-			*/
-			byte flags = input.readByte();
-			float flySpeed = input.readFloat();
-			float FOV = input.readFloat();
-			
-			log.log(Level.FINE, "Flag Value: {0}", flags);
-			if (getBit(flags, 0)) log.fine("Invulnerability Enabled");
-			if (getBit(flags, 1)) log.fine("Player is flying");
-			if (getBit(flags, 2)) log.fine("Flying Enabled");
-			if (getBit(flags, 3)) log.fine("Instant Break Enabled");
-			
-			log.log(Level.FINE, "Fly Speed: {0}", flySpeed);
-			log.log(Level.FINE, "FOV: {0}\n", FOV);
+			Protocol.playerAbilities(input);
 			
 			// C->S : Plugin Message (Optional) follow up from server plugin messasge
 			buffer = new ByteArrayOutputStream();
