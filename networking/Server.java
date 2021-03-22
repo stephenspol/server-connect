@@ -5,13 +5,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.DataFormatException;
-import java.util.zip.Inflater;
 import java.io.*;
 import java.net.*;
+import java.util.UUID;
 
 import networking.stream.*;
-import networking.protocol.*;
+import networking.protocol.clientbound.*;
 import main.Main;
 
 public class Server {
@@ -214,8 +213,7 @@ public class Server {
 
 			
 			// S->C : Login Success
-			byte[] UUID = new byte[16];
-			input.readFully(UUID);
+			UUID UUID = input.readUUID();
 
 			log.log(Level.INFO, "Player UUID: {0}", UUID);
 			
@@ -339,7 +337,7 @@ public class Server {
 			Z	0x04
 			Y_ROT	0x08
 			X_ROT	0x10*/
-			flags = input.readByte();
+			byte flags = input.readByte();
 			boolean[] isRelative = getBits(flags);
 			
 			int teleportID = input.readVarInt();

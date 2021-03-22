@@ -1,4 +1,4 @@
-package networking.protocol;
+package networking.protocol.clientbound;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

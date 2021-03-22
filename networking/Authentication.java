@@ -36,13 +36,13 @@ public class Authentication {
 
 		log.setUseParentHandlers(false);
 
-		log.setLevel(Level.FINER);
+		log.setLevel(Level.FINE);
 
 		ConsoleHandler consoleHandler = new ConsoleHandler();
 
 		log.addHandler(consoleHandler);
 
-		consoleHandler.setLevel(Level.FINER);
+		consoleHandler.setLevel(Level.FINE);
 
 		username = user.toLowerCase().trim(); // Make username standerized
 		password = pswd;
@@ -52,7 +52,7 @@ public class Authentication {
 		type = "application/json";
 		method = "POST";
 		
-		path = "../Tokens.txt";
+		path = "Tokens.txt";
 		
 		file = new File(path);
 		

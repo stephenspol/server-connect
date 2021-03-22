@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import networking.Server;
-
 import NBT.*;
 
 public class MinecraftInputStream extends DataInputStream {
@@ -18,7 +18,7 @@ public class MinecraftInputStream extends DataInputStream {
         super(in);
     }
     
-    public String readString() throws IOException {
+    public final String readString() throws IOException {
 		int length = readVarInt();
 
 		if (length == -1) {
@@ -29,13 +29,20 @@ public class MinecraftInputStream extends DataInputStream {
 			throw new IOException(Server.INVALID_LENGTH);
 		}
 
-		byte[] input = new byte[length];
-		readFully(input);  //read json string
+		byte[] buffer = new byte[length];
+		readFully(buffer);  //read json string
 
-		return new String(input);
+		return new String(buffer);
 	}
 
-	public int readVarInt() throws IOException {
+    public final UUID readUUID() throws IOException {
+        long msb = readLong();
+        long lsb = readLong();
+
+        return new UUID(msb, lsb);
+    }
+
+	public final int readVarInt() throws IOException {
 	    int i = 0;
 	    int j = 0;
 	    while (true) {
@@ -47,7 +54,7 @@ public class MinecraftInputStream extends DataInputStream {
 	    return i;
 	}
 	
-	public int[] readPos() throws IOException {
+	public final int[] readPos() throws IOException {
 		long val = readLong();
 		
 		int x = (int)(val >> 38); // 26 MSBs
@@ -61,11 +68,11 @@ public class MinecraftInputStream extends DataInputStream {
 		return new int[]{x, y, z};
 	}
 
-	public Tag readNBT() throws IOException {
+	public final Tag readNBT() throws IOException {
 		return readTag(0);
 	}
 
-	private Tag<?> readTag(int depth) throws IOException {
+	private final Tag<?> readTag(int depth) throws IOException {
         int id = readUnsignedByte();
 
 		TagType type = TagType.getById(id);
@@ -83,7 +90,7 @@ public class MinecraftInputStream extends DataInputStream {
         return readTagPayload(type, name, depth);
     }
 
-	private Tag<?> readTagPayload(TagType type, String name, int depth) throws IOException {
+	private final Tag<?> readTagPayload(TagType type, String name, int depth) throws IOException {
 		switch (type) {
             case TAG_END:
                 if (depth == 0) {
@@ -171,7 +178,7 @@ public class MinecraftInputStream extends DataInputStream {
         }
 	}
 
-	private String readTagString() throws IOException {
+	private final String readTagString() throws IOException {
 		int length = readUnsignedShort();
 
 		if (length == -1) {
