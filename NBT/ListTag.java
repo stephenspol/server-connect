@@ -23,4 +23,17 @@ public class ListTag<T extends Tag<?>> extends Tag<List<T>>{
         return value;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("TAG_LIST('" + name + "' [" + type.getName() + "]): " + value.size() + " entries");
+
+        for (int i = 0; i < value.size(); i++) {
+            sb.append("\n\t" + value.get(i));
+        }
+
+        return sb.toString();
+    }
+
 }

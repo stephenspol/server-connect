@@ -15,5 +15,18 @@ public class CompoundTag extends Tag<Map<String, Tag<?>>> {
     public Map<String, Tag<?>> getValue() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("TAG_COMPOUND('" + name + "'): " + value.size() + " entries");
+
+        for (Tag<?> tag : value.values()) {
+            sb.append("\n\t" + tag);
+        }
+
+        return sb.toString();
+    }
     
 }

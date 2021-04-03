@@ -13,4 +13,9 @@ public class DoubleTag extends Tag<Double> {
         return value;
     }
 
+    @Override
+    public String toString() {
+        return "TAG_DOUBLE('" + name + "'): " + value;
+    }
+
 }

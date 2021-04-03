@@ -13,4 +13,9 @@ public class LongTag extends Tag<Long> {
     public Long getValue() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "TAG_LONG('" + name + "'): " + value;
+    }
 }

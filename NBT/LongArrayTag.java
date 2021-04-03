@@ -12,5 +12,10 @@ public class LongArrayTag extends Tag<long[]> {
     public long[] getValue() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "TAG_LONG_ARRAY('" + name + "'): [" + value.length + " longs]";
+    }
     
 }

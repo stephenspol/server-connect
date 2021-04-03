@@ -2,7 +2,7 @@ package NBT;
 
 public abstract class Tag<T> {
     
-    private final String name;
+    protected final String name;
     private final TagType tagType;
 
     protected Tag(TagType tagType) {

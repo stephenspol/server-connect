@@ -12,4 +12,9 @@ public class ByteArrayTag extends Tag<byte[]> {
     public byte[] getValue() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "TAG_BYTE_ARRAY('" + name + "'): [" + value.length + " bytes]";
+    }
 }

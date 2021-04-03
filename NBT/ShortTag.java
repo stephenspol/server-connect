@@ -12,4 +12,9 @@ public class ShortTag extends Tag<Short> {
     public Short getValue() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "TAG_SHORT('" + name + "'): " + value; 
+    }
 }

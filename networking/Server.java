@@ -10,13 +10,14 @@ import java.net.*;
 import java.util.UUID;
 
 import networking.stream.*;
-import networking.protocol.clientbound.*;
+import networking.protocol.ClientboundManager;
+import networking.protocol.Protocol;
 import main.Main;
 
 public class Server {
 
-    private Logger log;
-    private ConsoleHandler consoleHandler;
+    private final Logger log = Logger.getLogger(Server.class.getName());
+    private final ConsoleHandler consoleHandler = new ConsoleHandler();
 
     private String address;
     private int port;
@@ -28,9 +29,6 @@ public class Server {
 	public static final String INVALID_PACKET = "Invalid packetID.";
 
     public Server (String address, int port) {
-        log = Logger.getLogger(Server.class.getName());
-        consoleHandler = new ConsoleHandler();
-
         log.setUseParentHandlers(false);
         log.addHandler(consoleHandler);
 
@@ -133,7 +131,7 @@ public class Server {
 
 		catch (NullPointerException e)
 		{
-			log.severe("Couldn't get Console instance! (Password is no longer secure)");
+			log.log(Level.SEVERE, "Could not get Console instance! (Password is no longer secure)", e);
 
 			System.out.print("Password: ");
 			passArray = Main.sc.next().toCharArray();
@@ -150,7 +148,7 @@ public class Server {
 
         log.info("Starting Login\n");
 
-		try (Socket socket = new Socket())
+		try  (final Socket socket = new Socket())
 		{
 			log.fine("Attempting to connect to server...");
 			socket.connect(host, timeout);
@@ -213,9 +211,9 @@ public class Server {
 
 			
 			// S->C : Login Success
-			UUID UUID = input.readUUID();
+			UUID uuid = input.readUUID();
 
-			log.log(Level.INFO, "Player UUID: {0}", UUID);
+			log.log(Level.INFO, "Player UUID: {0}", uuid);
 			
 			String json = input.readString();
 			
@@ -225,8 +223,13 @@ public class Server {
 
 			// <-------------- Start Play Mode ---------------->
 			
+			Thread t = new Thread(new ClientboundManager(socket));
+
+			t.start();
+			
+			
 			// S->C : Join Game
-			log.info("Joined Game!\n");
+			/*log.info("Joined Game!\n");
 			size = input.readVarInt();
 			packetId = input.readVarInt();
 
@@ -282,10 +285,10 @@ public class Server {
 				log.severe(PREMATURE);
 			}
 			
-			Protocol.playerAbilities(input);
+			Protocol.playerAbilities(input); */
 			
 			// C->S : Plugin Message (Optional) follow up from server plugin messasge
-			buffer = new ByteArrayOutputStream();
+			/*buffer = new ByteArrayOutputStream();
 			
 			MinecraftOutputStream message = new MinecraftOutputStream(buffer);
 			message.writeByte(0x0A); //packet id
@@ -317,7 +320,7 @@ public class Server {
 			output.write(userInfo);
 			
 			// S->C : Player Position And Look
-			size = input.readVarInt();
+			/*size = input.readVarInt();
 			packetId = input.readVarInt();
 
 			if (packetId == -1) {
@@ -329,7 +332,7 @@ public class Server {
 			double z = input.readDouble();
 			
 			float yaw = input.readFloat();
-			float pitch = input.readFloat();
+			float pitch = input.readFloat();*/
 			
 			/* If set, value is relative
 			X	0x01
@@ -337,7 +340,7 @@ public class Server {
 			Z	0x04
 			Y_ROT	0x08
 			X_ROT	0x10*/
-			byte flags = input.readByte();
+			/*byte flags = input.readByte();
 			boolean[] isRelative = getBits(flags);
 			
 			int teleportID = input.readVarInt();
@@ -441,6 +444,15 @@ public class Server {
 			if (packetId == -1) {
 				log.severe(PREMATURE);
 			}*/
+
+			// Keep main thread stuck in a loop to not kill socket while other thread is running
+			while(t.isAlive()) {
+				Thread.sleep(1000);
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			
+			Thread.currentThread().interrupt();
 		}
 
     }

@@ -29,10 +29,13 @@ public class Main {
 
 		consoleHandler.setLevel(Level.FINER);
 
-		System.out.print("Server Address: ");
+		/*System.out.print("Server Address: ");
 		address = sc.nextLine();
 		System.out.print("Port: ");
-		port = sc.nextInt();
+		port = sc.nextInt();*/
+
+		address = "127.0.0.1";
+		port = 25565;
 
 		Server server = new Server(address, port);
 

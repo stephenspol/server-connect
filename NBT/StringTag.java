@@ -12,4 +12,9 @@ public class StringTag extends Tag<String> {
     public String getValue() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "TAG_STRING('" + name + "'): '" + value + "'";
+    }
 }

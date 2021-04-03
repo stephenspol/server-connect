@@ -9,4 +9,8 @@ public class EndTag extends Tag<Object> {
     public Object getValue() {
         return null;
     }
+
+    public String toString() {
+        return "TAG_END";
+    }
 }

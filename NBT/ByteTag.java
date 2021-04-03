@@ -21,4 +21,9 @@ public class ByteTag extends Tag<Byte> {
         return value != 0;
     }
 
+    @Override
+    public String toString() {
+        return "TAG_BYTE('" + name + "'): " + value;
+    }
+
 }

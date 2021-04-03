@@ -12,4 +12,8 @@ public class IntTag extends Tag<Integer> {
     public Integer getValue() {
         return value;
     }
+
+    public String toString() {
+        return "TAG_INT('" + name + "'): " + value; 
+    }
 }

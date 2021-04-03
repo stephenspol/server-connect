@@ -12,5 +12,10 @@ public class IntArrayTag extends Tag<int[]> {
     public int[] getValue() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "TAG_INT_ARRAY('" + name + "'): [" + value.length + " integers]";
+    }
     
 }

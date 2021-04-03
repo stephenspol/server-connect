@@ -13,4 +13,9 @@ public class FloatTag extends Tag<Float> {
         return value;
     }
 
+    @Override
+    public String toString() {
+        return "TAG_FLOAT('" + name + "'): " + value;
+    }
+
 }
