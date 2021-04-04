@@ -6,7 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import networking.Server;
-import networking.stream.MinecraftInputStream;
+import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x30 | S->C
 public class PlayerAbilities {
@@ -24,15 +24,15 @@ public class PlayerAbilities {
 
     private PlayerAbilities() {}
     
-    public static void execute(MinecraftInputStream in) throws IOException{
+    public static void execute(MinecraftInputBuffer buffer) throws IOException{
         /*Invulnerable	0x01
         Flying	0x02
         Allow Flying	0x04
         Creative Mode (Instant Break)	0x08
         */
-        byte flags = in.readByte();
-        float flySpeed = in.readFloat();
-        float fov = in.readFloat();
+        byte flags = buffer.readByte();
+        float flySpeed = buffer.readFloat();
+        float fov = buffer.readFloat();
         
         log.log(Level.FINE, "Flag Value: {0}", flags);
         if (Server.getBit(flags, 0)) log.fine("Invulnerability Enabled");

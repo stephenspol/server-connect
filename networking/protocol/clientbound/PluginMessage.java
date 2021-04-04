@@ -5,7 +5,7 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import networking.stream.MinecraftInputStream;
+import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x17 | S->C
 public class PluginMessage {
@@ -22,12 +22,12 @@ public class PluginMessage {
 
     private PluginMessage() {}
 
-    public static void execute(MinecraftInputStream in) throws IOException{
-        String channel = in.readString();
+    public static void execute(MinecraftInputBuffer buffer) throws IOException{
+        String channel = buffer.readString();
             
         log.log(Level.FINE, "Identifier: {0}", channel);
             
-        String data = in.readString();
+        String data = buffer.readString();
             
         log.log(Level.FINE, "Data: {0}\n", data);
     }

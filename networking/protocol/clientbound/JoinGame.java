@@ -6,7 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import NBT.Tag;
-import networking.stream.MinecraftInputStream;
+import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x24 | S->C
 public class JoinGame {
@@ -25,35 +25,35 @@ public class JoinGame {
     private JoinGame() {}
 
     
-    public static void execute(MinecraftInputStream in) throws IOException{
-        int eid = in.readInt();
-        boolean isHardcore = in.readBoolean();
-        int gameMode = in.readUnsignedByte();
-        byte prevGameMode = in.readByte();
+    public static void execute(MinecraftInputBuffer buffer) throws IOException{
+        int eid = buffer.readInt();
+        boolean isHardcore = buffer.readBoolean();
+        int gameMode = buffer.readUnsignedByte();
+        byte prevGameMode = buffer.readByte();
 
-        int worldCount = in.readVarInt();
+        int worldCount = buffer.readVarInt();
 
         String[] worldNames = new String[worldCount];
 
         for (int i = 0; i < worldNames.length; i++)
         {
-            worldNames[i] = in.readString();
+            worldNames[i] = buffer.readString();
         }
 
-        Tag<?> dimCodec = in.readNBT();
-        Tag<?> dim = in.readNBT();
+        Tag<?> dimCodec = buffer.readNBT();
+        Tag<?> dim = buffer.readNBT();
 
-        String worldName = in.readString();
-        long hashedSeed = in.readLong();
+        String worldName = buffer.readString();
+        long hashedSeed = buffer.readLong();
 
-        int maxPlayers = in.readVarInt();
-        int viewDist = in.readVarInt();
+        int maxPlayers = buffer.readVarInt();
+        int viewDist = buffer.readVarInt();
         
-        boolean reducedDebug = in.readBoolean();
-        boolean enableRespawnScr = in.readBoolean();
-        boolean isDebug = in.readBoolean();
+        boolean reducedDebug = buffer.readBoolean();
+        boolean enableRespawnScr = buffer.readBoolean();
+        boolean isDebug = buffer.readBoolean();
 
-        boolean isFlat = in.readBoolean();
+        boolean isFlat = buffer.readBoolean();
         
         log.log(Level.FINE, "Entity ID: {0}", eid);
         log.log(Level.FINE, "Is Hardcore: {0}", isHardcore);

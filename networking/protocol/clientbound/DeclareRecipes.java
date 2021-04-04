@@ -5,7 +5,7 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import networking.stream.MinecraftInputStream;
+import networking.stream.MinecraftInputBuffer;
 import util.recipe.Recipe;
 
 // Packet ID 0x5A | S->C
@@ -23,14 +23,14 @@ public class DeclareRecipes {
 
     private DeclareRecipes() {}
 
-    public static void execute(MinecraftInputStream in) throws IOException {
-        int numOfRecipes = in.readVarInt();
+    public static void execute(MinecraftInputBuffer buffer) throws IOException {
+        int numOfRecipes = buffer.readVarInt();
         Recipe[] recipes = new Recipe[numOfRecipes];
 
         log.log(Level.FINE, "Recipes({0}):", numOfRecipes);
 
         for (int i = 0; i < recipes.length; i++) {
-            recipes[i] = in.readRecipe();
+            recipes[i] = buffer.readRecipe();
 
             log.log(Level.FINE, " [{0}]\n", recipes[i]);
         }

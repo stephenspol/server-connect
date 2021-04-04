@@ -5,7 +5,7 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import networking.stream.MinecraftInputStream;
+import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x42 | S->C
 public class SpawnPosition {
@@ -22,8 +22,8 @@ public class SpawnPosition {
 
     private SpawnPosition() {}
 
-    public static void execute(MinecraftInputStream in) throws IOException {
-        int[] pos = in.readPos();
+    public static void execute(MinecraftInputBuffer buffer) throws IOException {
+        int[] pos = buffer.readPos();
         
         log.fine("Spawn Position\n");
 

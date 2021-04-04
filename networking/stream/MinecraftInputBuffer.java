@@ -2,8 +2,8 @@ package networking.stream;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,10 +14,84 @@ import util.Slot;
 import util.recipe.*;
 import NBT.*;
 
-public class MinecraftInputStream extends DataInputStream {
+public class MinecraftInputBuffer {
 
-    public MinecraftInputStream(InputStream in) {
-        super(in);
+    private byte[] buffer;
+    private int pos;
+
+    public MinecraftInputBuffer(byte[] buffer) {
+        this.buffer = buffer;
+        pos = 0;
+    }
+
+    public MinecraftInputBuffer(DataInputStream in) throws IOException {
+        int i = 0;
+	    int j = 0;
+	    while (true) {
+	        int k = in.read();
+	        i |= (k & 0x7F) << j++ * 7;
+	        if (j > 5) throw new IOException("VarInt too big");
+	        if ((k & 0x80) != 128) break;
+	    }
+
+        if (i < 0) throw new IOException("Premature stream. Size is: " + i);
+	    
+        buffer = new byte[i];
+
+        in.readFully(buffer);
+
+        pos = 0;
+    }
+
+    public final byte readByte() {
+        return buffer[pos++];
+    }
+
+    public final short readUnsignedByte() {
+        return (short) (buffer[pos++] & 0xFF);
+    }
+
+    public final boolean readBoolean() {
+        return readByte() != 0;
+    }
+
+    public final byte[] readBytes(int count) {
+        byte[] b = new byte[count];
+        System.arraycopy(buffer, pos, b, 0, count);
+        pos += count;
+        
+        return b;
+    }
+
+    public final short readShort() {
+        return (short) (((readUnsignedByte()) << 8) | (readUnsignedByte()));
+    }
+
+    public final int readUnsignedShort() {
+        return ((readUnsignedByte()) << 8) | (readUnsignedByte());
+    }
+
+    public final int readInt() {
+        return ((readUnsignedByte() << 24) | (readUnsignedByte() << 16) | (readUnsignedByte() << 8) | (readUnsignedByte()));
+    }
+
+    public final float readFloat() {
+        return Float.intBitsToFloat(readInt());
+    }
+
+    public final double readDouble() {
+        return Double.longBitsToDouble(readLong());
+    }
+
+    public final long readLong() {
+        return (((long)readUnsignedByte() << 56) +
+                ((long)(readUnsignedByte() & 255) << 48) +
+                ((long)(readUnsignedByte() & 255) << 40) +
+                ((long)(readUnsignedByte() & 255) << 32) +
+                ((long)(readUnsignedByte() & 255) << 24) +
+                ((readUnsignedByte() & 255) << 16) +
+                ((readUnsignedByte() & 255) <<  8) +
+                ((readUnsignedByte() & 255) <<  0));
     }
     
     public final String readString() throws IOException {
@@ -31,13 +105,10 @@ public class MinecraftInputStream extends DataInputStream {
 			throw new IOException(Server.INVALID_LENGTH);
 		}
 
-		byte[] buffer = new byte[length];
-		readFully(buffer);  //read json string
-
-		return new String(buffer);
+		return new String(readBytes(length));
 	}
 
-    public final UUID readUUID() throws IOException {
+    public final UUID readUUID() {
         long msb = readLong();
         long lsb = readLong();
 
@@ -56,7 +127,7 @@ public class MinecraftInputStream extends DataInputStream {
 	    return i;
 	}
 	
-	public final int[] readPos() throws IOException {
+	public final int[] readPos() {
 		long val = readLong();
 		
 		int x = (int)(val >> 38); // 26 MSBs
@@ -117,9 +188,7 @@ public class MinecraftInputStream extends DataInputStream {
 
             case TAG_BYTE_ARRAY:
                 int length = readInt();
-                byte[] bytes = new byte[length];
-                readFully(bytes);
-                return new ByteArrayTag(name, bytes);
+                return new ByteArrayTag(name, readBytes(length));
 
             case TAG_STRING:
                 return new StringTag(name, readTagString());
@@ -187,10 +256,7 @@ public class MinecraftInputStream extends DataInputStream {
 			return "";
 		}
 
-		byte[] input = new byte[length];
-		readFully(input);  //read json string
-
-		return new String(input);
+		return new String(readBytes(length));
 	}
 
     public final Slot readSlot() throws IOException {
@@ -372,6 +438,10 @@ public class MinecraftInputStream extends DataInputStream {
         }
 
         return new Ingredient(slots);
+    }
+
+    public int size() {
+        return buffer.length;
     }
     
 }

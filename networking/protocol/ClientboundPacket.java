@@ -7,7 +7,7 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import networking.stream.MinecraftInputStream;
+import networking.stream.MinecraftInputBuffer;
 import networking.protocol.clientbound.*;
 
 public enum ClientboundPacket {
@@ -140,16 +140,16 @@ public enum ClientboundPacket {
         return id;
     }
 
-    public void execute(MinecraftInputStream in) throws IOException{
+    public void execute(MinecraftInputBuffer buffer) throws IOException{
         if (clazz == null) {
             throw new IOException("Class does not exist for packet ID:0x" + Integer.toHexString(id).toUpperCase());
         }
 
         try {
-            Method method = clazz.getMethod("execute", MinecraftInputStream.class);
+            Method method = clazz.getMethod("execute", MinecraftInputBuffer.class);
 
             // Call null because method is static
-            method.invoke(null, in);
+            method.invoke(null, buffer);
         } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e) {
             throw new IOException("Error on Invoking method!", e);
         } catch (InvocationTargetException e) {

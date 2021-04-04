@@ -1,5 +1,6 @@
 package networking.protocol;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.logging.ConsoleHandler;
@@ -7,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import networking.Server;
-import networking.stream.MinecraftInputStream;
+import networking.stream.MinecraftInputBuffer;
 
 public class ClientboundManager implements Runnable {
 
@@ -15,12 +16,12 @@ public class ClientboundManager implements Runnable {
     private final ConsoleHandler consoleHandler = new ConsoleHandler();
 
     Socket socket;
-    MinecraftInputStream in;
+    DataInputStream in;
 
     public ClientboundManager(Socket socket) throws IOException {
         this.socket = socket;
 
-        in = new MinecraftInputStream(socket.getInputStream());
+        in = new DataInputStream(socket.getInputStream());
  
         log.setUseParentHandlers(false);
 		log.addHandler(consoleHandler);
@@ -35,40 +36,33 @@ public class ClientboundManager implements Runnable {
         while (!socket.isClosed()) {
 
             try {
-                int size = in.readVarInt();
+                MinecraftInputBuffer buffer = new MinecraftInputBuffer(in);
 
-                if (size == -1) {
-                    //log.severe(Server.PREMATURE);
-
-                    Thread.sleep(100);
-                    log.finer("Thread is sleeping for 100ms!");
-                    
-                    continue;
-                }
-
-                int packetId = in.readVarInt();
+                int packetId = buffer.readVarInt();
 
                 if (packetId == -1) {
                     log.severe(Server.PREMATURE);
                 }
 
-                if (size == 0) {
-                    log.severe(Server.INVALID_LENGTH);
-                }
-
                 log.log(Level.FINER, "Reading packetID:0x{0}, Size: {1} Bytes\n", 
-                        new Object[]{Integer.toHexString(packetId).toUpperCase(), size});
+                        new Object[]{Integer.toHexString(packetId).toUpperCase(), buffer.size()});
 
-                ClientboundPacket.getById(packetId).execute(in);
+                ClientboundPacket.getById(packetId).execute(buffer);
 
             } catch (IOException e) {
-                log.log(Level.SEVERE, "A IOException has occured!", e);
-                break;
 
-            } catch (InterruptedException e) {
-                log.log(Level.FINER, "Thread got interrupted!", e);
+                try {
+                    Thread.sleep(100);
+                    log.finer("Thread is sleeping for 100ms!");
 
-                Thread.currentThread().interrupt();
+                    log.log(Level.SEVERE, "A IOException has occured!", e);
+                    
+                } catch (InterruptedException e2) {
+                    log.log(Level.FINER, "Thread got interrupted!", e2);
+    
+                    Thread.currentThread().interrupt();
+                }
+
             }
         }
 

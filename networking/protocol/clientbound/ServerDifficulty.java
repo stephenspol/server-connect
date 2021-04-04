@@ -5,7 +5,7 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import networking.stream.MinecraftInputStream;
+import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x0D | S->C
 public class ServerDifficulty {
@@ -23,12 +23,12 @@ public class ServerDifficulty {
 
     private ServerDifficulty() {}
 
-    public static void execute(MinecraftInputStream in) throws IOException {
-        int difficulty = in.readUnsignedByte();
+    public static void execute(MinecraftInputBuffer buffer) throws IOException {
+        int difficulty = buffer.readUnsignedByte();
             
         log.log(Level.FINE, "Server Difficulty: {0}", difficulty);
 
-        boolean locked = in.readBoolean();
+        boolean locked = buffer.readBoolean();
 
         log.log(Level.FINE, "Difficulty Locked: {0}\n", locked); 
     }

@@ -5,7 +5,7 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import networking.stream.MinecraftInputStream;
+import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x3F | S->C
 public class HeldItemChange {
@@ -22,8 +22,8 @@ public class HeldItemChange {
 
     private HeldItemChange() {}
 
-    public static void execute(MinecraftInputStream in) throws IOException{
-        byte slot = in.readByte();
+    public static void execute(MinecraftInputBuffer buffer) throws IOException{
+        byte slot = buffer.readByte();
 
         log.log(Level.FINE, "Player selected slot {0}\n", slot);
     }

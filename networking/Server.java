@@ -51,7 +51,7 @@ public class Server {
             log.info("Connection to server successful!\n");
 
             MinecraftOutputStream output = new MinecraftOutputStream(socket.getOutputStream());
-            MinecraftInputStream input = new MinecraftInputStream(socket.getInputStream());
+            DataInputStream input = new DataInputStream(socket.getInputStream());
 
             log.log(Level.FINE, "Attempting handshake with {0}...", host.getAddress());
             byte[] handshakeMessage = Protocol.createHandshakeMessage(address, port, 1);
@@ -67,8 +67,9 @@ public class Server {
             log.fine("Status request sent\n");
 
             // S->C : Response
-            int size = input.readVarInt();
-            int packetId = input.readVarInt();
+            MinecraftInputBuffer buffer = new MinecraftInputBuffer(input);
+
+            int packetId = buffer.readVarInt();
 
             if (packetId == -1) {
                 log.severe(PREMATURE);
@@ -78,7 +79,7 @@ public class Server {
                 log.severe(INVALID_PACKET);
             }
 			
-            String json = input.readString();
+            String json = buffer.readString();
 
             // C->S : Ping
             long now = System.currentTimeMillis();
@@ -88,8 +89,8 @@ public class Server {
             log.fine("Pinging server...");
 
             // S->C : Pong
-            input.readVarInt();
-            packetId = input.readVarInt();
+            buffer = new MinecraftInputBuffer(input);
+            packetId = buffer.readVarInt();
 
             if (packetId == -1) {
                 log.severe(PREMATURE);
@@ -99,7 +100,7 @@ public class Server {
                 log.severe(INVALID_PACKET);
             }
 
-            long pingtime = input.readLong(); //read response
+            long pingtime = buffer.readLong(); //read response
 
             log.log(Level.FINE, "Pong time: {0}ms\n", pingtime);
             // print out server info
@@ -155,7 +156,7 @@ public class Server {
 			log.info("Connection Completed!\n");
 
 			MinecraftOutputStream output = new MinecraftOutputStream(socket.getOutputStream());
-			MinecraftInputStream input = new MinecraftInputStream(socket.getInputStream());
+			DataInputStream input = new DataInputStream(socket.getInputStream());
 
 			log.log(Level.FINE, "Attempting handshake with {0}...", host.getAddress());
 			byte[] handshakeMessage = Protocol.createHandshakeMessage(address, port, 2);
@@ -166,13 +167,13 @@ public class Server {
 			log.fine("Handshake sent\n");
 			
 			// C->S : Login Start
-			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-			MinecraftOutputStream string = new MinecraftOutputStream(buffer);
+			MinecraftOutputStream string = new MinecraftOutputStream(out);
 			string.writeByte(0x00); //packet id
 			string.writeString(name, StandardCharsets.UTF_8);
 
-			byte[] userInfo = buffer.toByteArray();
+			byte[] userInfo = out.toByteArray();
 
 			output.writeVarInt(userInfo.length);
 			output.write(userInfo);
@@ -185,8 +186,9 @@ public class Server {
 			}
 			
 			// S->C : Set Compression (optional)
-			int size = input.readVarInt();
-			int packetId = input.readVarInt();
+			MinecraftInputBuffer buffer = new MinecraftInputBuffer(input);
+			int size = buffer.size();
+			int packetId = buffer.readVarInt();
 
 			// Set Compression ID == 3
 			if (packetId == 3) {
@@ -199,23 +201,23 @@ public class Server {
 					log.severe(INVALID_LENGTH);
 				}
 				
-				int data = input.readVarInt();
+				int data = buffer.readVarInt();
 				
 				log.log(Level.FINE, "Compression size: {0}", data);
 				
 				// if received set compression packet and is not a negative number, enable compression
 
-				size = input.readVarInt();
-				packetId = input.readVarInt();
+				buffer = new MinecraftInputBuffer(input);
+				packetId = buffer.readVarInt();
 			}
 
 			
 			// S->C : Login Success
-			UUID uuid = input.readUUID();
+			UUID uuid = buffer.readUUID();
 
 			log.log(Level.INFO, "Player UUID: {0}", uuid);
 			
-			String json = input.readString();
+			String json = buffer.readString();
 			
 			log.log(Level.INFO, "Name: {0}\n", json);
 
