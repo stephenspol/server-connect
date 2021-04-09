@@ -6,15 +6,16 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x3F | S->C
-public class HeldItemChange {
+// Packet ID 0x1C | S->C
+public class UnloadChunk {
 
-    private HeldItemChange() {}
+    private UnloadChunk() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        byte slot = buffer.readByte();
+        int x = buffer.readInt();
+        int z = buffer.readInt();
 
-        log.log(packetInfo, "Player selected slot {0}\n", slot);
+        log.log(packetInfo, "Chunk located at X: {0}, Y: {1}, unloaded", new int[]{x, z});
     }
     
 }

@@ -6,15 +6,16 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x3F | S->C
-public class HeldItemChange {
+// Packet ID 0x2F | S->C
+public class CraftRecipeResponse {
 
-    private HeldItemChange() {}
+    private CraftRecipeResponse() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        byte slot = buffer.readByte();
+        byte windowID = buffer.readByte();
+        String recipe = buffer.readString();
 
-        log.log(packetInfo, "Player selected slot {0}\n", slot);
+        log.log(packetInfo, "Window ID {0} created recipe {1}", new Object[]{windowID, recipe});
     }
     
 }

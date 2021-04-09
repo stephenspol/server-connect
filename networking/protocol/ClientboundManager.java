@@ -44,7 +44,7 @@ public class ClientboundManager implements Runnable {
                     log.severe(Server.PREMATURE);
                 }
 
-                log.log(Level.FINER, "Reading packetID:0x{0}, Size: {1} Bytes\n", 
+                log.log(Level.FINE, "Reading packetID:0x{0}, Size: {1} Bytes\n", 
                         new Object[]{Integer.toHexString(packetId).toUpperCase(), buffer.size()});
 
                 ClientboundPacket.getById(packetId).execute(buffer);
@@ -56,7 +56,7 @@ public class ClientboundManager implements Runnable {
                     log.finer("Thread is sleeping for 100ms!");
 
                     log.log(Level.SEVERE, "A IOException has occured!", e);
-                    
+
                 } catch (InterruptedException e2) {
                     log.log(Level.FINER, "Thread got interrupted!", e2);
     

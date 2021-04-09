@@ -6,15 +6,16 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x3F | S->C
-public class HeldItemChange {
+// Packet ID 0x0B | S->C
+public class BlockChange {
 
-    private HeldItemChange() {}
+    private BlockChange() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        byte slot = buffer.readByte();
+        int[] location = buffer.readPos();
+        int blockID = buffer.readVarInt();
 
-        log.log(packetInfo, "Player selected slot {0}\n", slot);
+        log.log(packetInfo, "Change block id {0} at location X: {1}, Y: {2}. Z: {3}", new int[]{blockID, location[0], location[1], location[2]});
     }
     
 }

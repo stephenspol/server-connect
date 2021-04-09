@@ -6,15 +6,15 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x3F | S->C
-public class HeldItemChange {
+// Packet ID 0x2E | S->C
+public class OpenSignEditor {
 
-    private HeldItemChange() {}
+    private OpenSignEditor() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        byte slot = buffer.readByte();
+        int[] pos = buffer.readPos();
 
-        log.log(packetInfo, "Player selected slot {0}\n", slot);
+        log.log(packetInfo, "Edit sign at X: {0}, Y: {1}, Z: {2)", pos);
     }
     
 }

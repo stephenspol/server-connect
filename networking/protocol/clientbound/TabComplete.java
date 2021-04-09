@@ -6,15 +6,17 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x3F | S->C
-public class HeldItemChange {
+// Packet ID 0x06 | S->C
+public class TabComplete {
 
-    private HeldItemChange() {}
+    private TabComplete() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        byte slot = buffer.readByte();
+        int transactionID = buffer.readVarInt();
 
-        log.log(packetInfo, "Player selected slot {0}\n", slot);
+        String text = buffer.readString();
+
+        log.log(packetInfo, "Tab Complete Transaction ID {0}, Text: {1}", new Object[]{transactionID, text});
     }
     
 }

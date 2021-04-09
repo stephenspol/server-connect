@@ -1,26 +1,14 @@
 package networking.protocol.clientbound;
 
 import java.io.IOException;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import static networking.protocol.ClientboundPacket.packetInfo;
+import static networking.protocol.ClientboundPacket.log;
 import networking.Server;
 import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x30 | S->C
 public class PlayerAbilities {
-
-    private static final Logger log = Logger.getLogger(PlayerAbilities.class.getName());
-    private static final ConsoleHandler consoleHandler = new ConsoleHandler();
-
-	static {
-		log.setUseParentHandlers(false);
-		log.addHandler(consoleHandler);
-
-		log.setLevel(Level.FINER);
-		consoleHandler.setLevel(Level.FINER);
-	}
 
     private PlayerAbilities() {}
     
@@ -34,14 +22,14 @@ public class PlayerAbilities {
         float flySpeed = buffer.readFloat();
         float fov = buffer.readFloat();
         
-        log.log(Level.FINE, "Flag Value: {0}", flags);
-        if (Server.getBit(flags, 0)) log.fine("Invulnerability Enabled");
-        if (Server.getBit(flags, 1)) log.fine("Player is flying");
-        if (Server.getBit(flags, 2)) log.fine("Flying Enabled");
-        if (Server.getBit(flags, 3)) log.fine("Instant Break Enabled");
+        log.log(packetInfo, "Flag Value: {0}", flags);
+        if (Server.getBit(flags, 0)) log.log(packetInfo, "Invulnerability Enabled");
+        if (Server.getBit(flags, 1)) log.log(packetInfo, "Player is flying");
+        if (Server.getBit(flags, 2)) log.log(packetInfo, "Flying Enabled");
+        if (Server.getBit(flags, 3)) log.log(packetInfo, "Instant Break Enabled");
         
-        log.log(Level.FINE, "Fly Speed: {0}", flySpeed);
-        log.log(Level.FINE, "FOV: {0}\n", fov);
+        log.log(packetInfo, "Fly Speed: {0}", flySpeed);
+        log.log(packetInfo, "FOV: {0}\n", fov);
     }
     
 }

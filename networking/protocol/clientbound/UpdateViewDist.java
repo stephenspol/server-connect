@@ -6,15 +6,15 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x3F | S->C
-public class HeldItemChange {
+// Packet ID 0x41 | S->C
+public class UpdateViewDist {
 
-    private HeldItemChange() {}
+    private UpdateViewDist() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        byte slot = buffer.readByte();
+        int viewDist = buffer.readVarInt();
 
-        log.log(packetInfo, "Player selected slot {0}\n", slot);
+        log.log(packetInfo, "Update View Distance: {0}", viewDist);
     }
     
 }

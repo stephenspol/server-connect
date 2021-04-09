@@ -3,7 +3,6 @@ package networking.stream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,13 +118,29 @@ public class MinecraftInputBuffer {
 	    int i = 0;
 	    int j = 0;
 	    while (true) {
-	        int k = readByte();
+	        byte k = readByte();
 	        i |= (k & 0x7F) << j++ * 7;
 	        if (j > 5) throw new IOException("VarInt too big");
 	        if ((k & 0x80) != 128) break;
 	    }
 	    return i;
 	}
+
+    public final long readVarLong() throws IOException {
+        int numRead = 0;
+        long result = 0;
+        while (true) {
+            byte read = readByte();
+            long value = (read & 0b01111111);
+            result |= (value << (7 * numRead));
+    
+            numRead++;
+            if (numRead > 10) throw new IOException("VarLong is too big");
+            if ((read & 0b10000000) != 0) break;
+        }
+    
+        return result;
+    }
 	
 	public final int[] readPos() {
 		long val = readLong();
@@ -140,6 +155,15 @@ public class MinecraftInputBuffer {
 		
 		return new int[]{x, y, z};
 	}
+
+    public short readAngle() {
+        return (short) (readByte() * (360F/256F));
+    }
+
+    public double readFixedPointNumberInt() {
+        return readInt() / 32.0D;
+    }
+
 
 	public final Tag readNBT() throws IOException {
 		return readTag(0);
@@ -443,5 +467,4 @@ public class MinecraftInputBuffer {
     public int size() {
         return buffer.length;
     }
-    
 }

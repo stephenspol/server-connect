@@ -6,15 +6,16 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x3F | S->C
-public class HeldItemChange {
+// Packet ID 0x1D | S->C
+public class ChangeGameState {
 
-    private HeldItemChange() {}
+    private ChangeGameState() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        byte slot = buffer.readByte();
+        short reason = buffer.readUnsignedByte();
+        float value = buffer.readFloat();
 
-        log.log(packetInfo, "Player selected slot {0}\n", slot);
+        log.log(packetInfo, "Change game state for reason {0}, Value: {1}", new Object[]{reason, value});
     }
     
 }

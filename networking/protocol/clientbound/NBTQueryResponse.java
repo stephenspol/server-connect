@@ -2,19 +2,24 @@ package networking.protocol.clientbound;
 
 import java.io.IOException;
 
+import NBT.Tag;
+
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x3F | S->C
-public class HeldItemChange {
+// Packet ID 0x54 | S->C
+public class NBTQueryResponse {
 
-    private HeldItemChange() {}
+    private NBTQueryResponse() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        byte slot = buffer.readByte();
+        int transactionID = buffer.readVarInt();
 
-        log.log(packetInfo, "Player selected slot {0}\n", slot);
+        Tag<?> nbt = buffer.readNBT();
+
+        log.log(packetInfo, "Transaction ID: {0}", transactionID);
+        log.log(packetInfo, "NBT Data: {0}", nbt);
     }
     
 }

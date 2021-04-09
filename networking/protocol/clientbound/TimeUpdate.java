@@ -6,15 +6,17 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x3F | S->C
-public class HeldItemChange {
+// Packet ID 0x4E | S->C
+public class TimeUpdate {
 
-    private HeldItemChange() {}
+    private TimeUpdate() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        byte slot = buffer.readByte();
+        long worldAge = buffer.readLong();
+        long timeOfDay = buffer.readLong();
 
-        log.log(packetInfo, "Player selected slot {0}\n", slot);
+        log.log(packetInfo, "World Age: {0}", worldAge);
+        log.log(packetInfo, "Time of Day: {0}", timeOfDay);
     }
     
 }

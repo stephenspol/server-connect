@@ -6,15 +6,16 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x3F | S->C
-public class HeldItemChange {
+// Packet ID 0x3A | S->C
+public class EntityHeadLook {
 
-    private HeldItemChange() {}
+    private EntityHeadLook() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        byte slot = buffer.readByte();
+        int entityID = buffer.readVarInt();
+        short yaw = buffer.readAngle();
 
-        log.log(packetInfo, "Player selected slot {0}\n", slot);
+        log.log(packetInfo, "Entity ID: {0}, Head Angle: {1}", new Object[]{entityID, yaw});
     }
     
 }
