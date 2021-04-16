@@ -180,7 +180,7 @@ public class MinecraftInputBuffer {
 		TagType type = TagType.getById(id);
 
 		String name;
-
+        
         if (type != TagType.TAG_END) {
 
 			name = readString(readUnsignedShort());
@@ -265,7 +265,7 @@ public class MinecraftInputBuffer {
                 length = readInt();
                 long[] longs = new long[length];
                 for (int i = 0; i < length; i++) {
-                    longs[i] = readShort();
+                    longs[i] = readLong();
                 }
                 return new LongArrayTag(name, longs);
 
@@ -355,13 +355,13 @@ public class MinecraftInputBuffer {
             case CRAFTING_SPECIAL_TIPPEDARROW:
                 return new CraftingSpecialTippedArrow(type, id);
 
-            case CRAFTING_SPECIAL_BANNERDUPLICATION:
-                return new CraftingSpecialBannerDuplication(type, id);
+            case CRAFTING_SPECIAL_BANNERDUPLICATE:
+                return new CraftingSpecialBannerDuplicate(type, id);
 
             case CRAFTING_SPECIAL_BANNERADDPATTERN:
                 return new CraftingSpecialBannerAddPattern(type, id);
 
-            case CRAFTING_SPECIAL_SHEILDDECORATION:
+            case CRAFTING_SPECIAL_SHIELDDECORATION:
                 return new CraftingSpecialShieldDecoration(type, id);
 
             case CRAFTING_SPECIAL_SHULKERBOXCOLORING:

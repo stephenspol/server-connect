@@ -1,5 +1,6 @@
 package networking.protocol;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -115,8 +116,11 @@ public enum ClientboundPacket {
 
 	static {
         try {
-            fileHandler = new FileHandler("Info Log - %u.txt");
-            fileErrHandler = new FileHandler("Error Log - %u.txt");
+            // Create logs directory if it does not exist
+            new File("logs").mkdir();
+
+            fileHandler = new FileHandler("logs/Info Log - %u.txt");
+            fileErrHandler = new FileHandler("logs/Error Log - %u.txt");
 
             log.setUseParentHandlers(false);
             log.addHandler(consoleHandler);

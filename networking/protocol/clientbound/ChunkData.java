@@ -34,7 +34,7 @@ public class ChunkData {
             for (int i = 0; i < length; i++) {
                 boimes[i] = buffer.readVarInt();
                 // It goes X, Z, Y
-                if (i % 3 == 0) {
+                if (i % 3 == 0 && i != 0) {
                     log.log(packetInfo, "Boime {0}, X: {1}, Y:{2}, Z:{3}", new Object[]{i, boimes[i-2], boimes[i], boimes[i-1]});
                 }
             }
@@ -52,6 +52,8 @@ public class ChunkData {
 
         for (int i = 0; i < length; i++) {
             blocks[i] = buffer.readNBT();
+
+            log.log(packetInfo, "NBT Data Block {0}: {1}", new Object[]{i, blocks[i]});
         }
 
     }
