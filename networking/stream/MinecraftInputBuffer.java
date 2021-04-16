@@ -13,7 +13,7 @@ import java.util.UUID;
 import networking.Server;
 import util.Slot;
 import util.recipe.*;
-import NBT.*;
+import nbt.*;
 
 public class MinecraftInputBuffer {
 

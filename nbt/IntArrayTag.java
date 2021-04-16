@@ -1,4 +1,4 @@
-package NBT;
+package nbt;
 
 public class IntArrayTag extends Tag<int[]> {
 

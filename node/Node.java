@@ -1,4 +1,4 @@
-package main.node;
+package node;
 
 public abstract class Node<T> {
 

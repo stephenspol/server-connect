@@ -1,4 +1,4 @@
-package NBT;
+package nbt;
 
 import java.util.Map;
 

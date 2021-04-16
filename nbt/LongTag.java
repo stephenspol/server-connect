@@ -1,4 +1,4 @@
-package NBT;
+package nbt;
 
 public class LongTag extends Tag<Long> {
 

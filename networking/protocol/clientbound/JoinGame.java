@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
-import NBT.Tag;
+import nbt.Tag;
 import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x24 | S->C

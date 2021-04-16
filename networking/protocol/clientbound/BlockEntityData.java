@@ -2,7 +2,7 @@ package networking.protocol.clientbound;
 
 import java.io.IOException;
 
-import NBT.Tag;
+import nbt.Tag;
 
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;

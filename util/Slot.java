@@ -1,6 +1,6 @@
 package util;
 
-import NBT.Tag;
+import nbt.Tag;
 
 public class Slot {
 

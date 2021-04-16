@@ -1,4 +1,4 @@
-package NBT;
+package nbt;
 
 public class LongArrayTag extends Tag<long[]> {
 

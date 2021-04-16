@@ -1,4 +1,4 @@
-package NBT;
+package nbt;
 
 public class ByteArrayTag extends Tag<byte[]> {
     
