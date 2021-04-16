@@ -18,7 +18,7 @@ public class Explosion {
 
         float strength = buffer.readFloat();
 
-        log.log(packetInfo, "Explosion at X: {0}, Y: {1}, Z: {2}, Strength: {3}", new float[]{x, y, z, strength});
+        log.log(packetInfo, "Explosion at X: {0}, Y: {1}, Z: {2}, Strength: {3}", new Object[]{x, y, z, strength});
 
         int length = buffer.readInt();
 
@@ -35,7 +35,7 @@ public class Explosion {
         float velY = buffer.readFloat();
         float velZ = buffer.readFloat();
 
-        log.log(packetInfo, "Player motion Velocity X: {0}, Y: {1}, Z: {2}", new float[]{velX, velY, velZ});
+        log.log(packetInfo, "Player motion Velocity X: {0}, Y: {1}, Z: {2}", new Object[]{velX, velY, velZ});
     }
     
 }

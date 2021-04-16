@@ -51,7 +51,7 @@ public class BossBar {
                 color = buffer.readVarInt();
                 division = buffer.readVarInt();
 
-                log.log(packetInfo, "Update Boss Bar style, Color: {0}, Division: {1}", new int[]{color, division});
+                log.log(packetInfo, "Update Boss Bar style, Color: {0}, Division: {1}", new Object[]{color, division});
                 break;
 
             case 5:

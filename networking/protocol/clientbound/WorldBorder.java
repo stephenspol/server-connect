@@ -32,7 +32,7 @@ public class WorldBorder {
                 double x = buffer.readDouble();
                 double z = buffer.readDouble();
 
-                log.log(packetInfo, "Set center to X: {0}, Z: {1}", new double[]{x, z});
+                log.log(packetInfo, "Set center to X: {0}, Z: {1}", new Object[]{x, z});
                 break;
 
             case 3:
@@ -49,7 +49,7 @@ public class WorldBorder {
                 int warningBlocks = buffer.readVarInt();
                 int warningTime = buffer.readVarInt();
 
-                log.log(packetInfo, "Initilize World Border, X: {0}, Z: {1}, Old Diameter: {2}, New Diameter: {3}", new double[]{x, z, oldDiamter, newDiameter});
+                log.log(packetInfo, "Initilize World Border, X: {0}, Z: {1}, Old Diameter: {2}, New Diameter: {3}", new Object[]{x, z, oldDiamter, newDiameter});
                 log.log(packetInfo, "Speed: {0}, Portal Teleport Boundary: {1}, Warning Blocks: {2}, Warning Time: {3}", new Object[]{speed, portalTeleBoundary, warningBlocks, warningTime});
                 break;
 
@@ -60,7 +60,7 @@ public class WorldBorder {
 
             case 5:
                 warningBlocks = buffer.readVarInt();
-                log.log(packetInfo, "Set warning blocks: {1}", warningBlocks);
+                log.log(packetInfo, "Set warning blocks: {0}", warningBlocks);
                 break;
 
             default:

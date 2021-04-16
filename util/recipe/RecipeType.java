@@ -19,7 +19,7 @@ public enum RecipeType {
     CRAFTING_SPECIAL_BANNERADDPATTERN(CraftingSpecialBannerAddPattern.class),
     CRAFTING_SPECIAL_SHEILDDECORATION(CraftingSpecialShieldDecoration.class),
     CRAFTING_SPECIAL_SHULKERBOXCOLORING(CraftingSpecialShulkerBoxColoring.class),
-    CRAFTING_SPECIAL_SUSPECIOUSSTEW(CraftingSpecialSuspeciousStew.class),
+    CRAFTING_SPECIAL_SUSPICIOUSSTEW(CraftingSpecialSuspiciousStew.class),
     SMELTING(CraftingSmelting.class),
     BLASTING(CraftingBlasting.class),
     SMOKING(CraftingSmoking.class),

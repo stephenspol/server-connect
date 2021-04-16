@@ -33,11 +33,11 @@ public class UpdateLight {
 
         log.log(packetInfo, "Update Lights at Chunk X: {0}, Chunk Y: {1}, Trust Edges: {2}", new Object[]{chunkX, chunkZ, trustEdges});
 
-        log.log(packetInfo, "Sky Light Mask: {0}, Block Light Mask: {1}", new int[]{skyLightMask, blockLightMask});
-        log.log(packetInfo, "Empty Sky Light Mask: {0}, Empty Sky Block Light Mask: {1}", new int[]{emptySkyLightMask, emptyBlockLightMask});
+        log.log(packetInfo, "Sky Light Mask: {0}, Block Light Mask: {1}", new Object[]{skyLightMask, blockLightMask});
+        log.log(packetInfo, "Empty Sky Light Mask: {0}, Empty Sky Block Light Mask: {1}", new Object[]{emptySkyLightMask, emptyBlockLightMask});
 
-        log.log(packetInfo, "Sky Lights: {0}", skyLights);
-        log.log(packetInfo, "Block Lights: {0}", blockLights);
+        log.log(packetInfo, "Sky Lights: Length {0}", skyLights.length);
+        log.log(packetInfo, "Block Lights: Length {0}", blockLights.length);
 
     }
     

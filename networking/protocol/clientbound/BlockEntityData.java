@@ -20,7 +20,7 @@ public class BlockEntityData {
 
         Tag<?> nbt = buffer.readNBT();
 
-        log.log(packetInfo, "Block located at X: {0}, Y: {1}, Z: {2}", location);
+        log.log(packetInfo, "Block located at X: {0}, Y: {1}, Z: {2}", new Object[]{location[0], location[1], location[2]});
         log.log(packetInfo, "Action: {0}, NBT Data: {1}", new Object[]{action, nbt});
     }
     

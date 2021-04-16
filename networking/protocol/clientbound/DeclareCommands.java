@@ -15,6 +15,8 @@ public class DeclareCommands {
         int length = buffer.readVarInt();
 
         log.log(packetInfo, "Number of nodes: {0}", length);
+
+        log.log(packetInfo, "Packet is incomplete");
     }
     
 }

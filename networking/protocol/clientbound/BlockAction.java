@@ -20,7 +20,7 @@ public class BlockAction {
         int blockID = buffer.readVarInt();
 
         log.log(packetInfo, "Block ID {0} at location X: {1}, Y: {2}, Z: {3}", new Object[]{blockID, location[0], location[1], location[2]});
-        log.log(packetInfo, "Action ID: {0}, Action Parameter: {1}", new Short[]{actionID, actionParam});
+        log.log(packetInfo, "Action ID: {0}, Action Parameter: {1}", new Object[]{actionID, actionParam});
     }
     
 }

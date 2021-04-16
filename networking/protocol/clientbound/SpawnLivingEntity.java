@@ -33,7 +33,7 @@ public class SpawnLivingEntity {
 
         log.log(packetInfo, "X: {0}, Y: {1}, Z: {2}, Yaw: {3}, Pitch: {4}, Head Pitch: {5}", new Object[]{x, y, z, yaw, pitch, headPitch});
 
-        log.log(packetInfo, "Velocities: [X: {0}, Y: {1}, Z: {2}]", new short[]{velX, velY, velZ});
+        log.log(packetInfo, "Velocitys: [X: {0}, Y: {1}, Z: {2}]", new Object[]{velX, velY, velZ});
     }
     
 }

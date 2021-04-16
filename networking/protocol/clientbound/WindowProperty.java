@@ -17,7 +17,7 @@ public class WindowProperty {
         short property = buffer.readShort();
         short value = buffer.readShort();
 
-        log.log(packetInfo, "Window ID: {0}, Property: {1}, Value: {2}", new short[]{windowID, property, value});
+        log.log(packetInfo, "Window ID: {0}, Property: {1}, Value: {2}", new Object[]{windowID, property, value});
     }
     
 }

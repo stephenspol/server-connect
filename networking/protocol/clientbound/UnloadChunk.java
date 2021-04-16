@@ -15,7 +15,7 @@ public class UnloadChunk {
         int x = buffer.readInt();
         int z = buffer.readInt();
 
-        log.log(packetInfo, "Chunk located at X: {0}, Y: {1}, unloaded", new int[]{x, z});
+        log.log(packetInfo, "Chunk located at X: {0}, Y: {1}, unloaded", new Object[]{x, z});
     }
     
 }

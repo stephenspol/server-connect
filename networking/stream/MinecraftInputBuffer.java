@@ -1,7 +1,9 @@
 package networking.stream;
 
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +30,9 @@ public class MinecraftInputBuffer {
 	    int j = 0;
 	    while (true) {
 	        int k = in.read();
+            if (k == -1) throw new EOFException("Stream Ended!");
 	        i |= (k & 0x7F) << j++ * 7;
-	        if (j > 5) throw new IOException("VarInt too big");
+	        if (j > 5) throw new IOException("VarInt too big!");
 	        if ((k & 0x80) != 128) break;
 	    }
 
@@ -94,14 +97,16 @@ public class MinecraftInputBuffer {
     }
     
     public final String readString() throws IOException {
-		int length = readVarInt();
+		return readString(readVarInt());
+	}
 
+    public final String readString(int length) throws IOException {
 		if (length == -1) {
 			throw new IOException(Server.PREMATURE);
 		}
 
 		else if (length == 0) {
-			throw new IOException(Server.INVALID_LENGTH);
+			return "";
 		}
 
 		return new String(readBytes(length));
@@ -176,9 +181,9 @@ public class MinecraftInputBuffer {
 
 		String name;
 
-		if (type != TagType.TAG_END) {
+        if (type != TagType.TAG_END) {
 
-			name = readTagString();
+			name = readString(readUnsignedShort());
 
 		} else {
 			name = "";
@@ -215,7 +220,7 @@ public class MinecraftInputBuffer {
                 return new ByteArrayTag(name, readBytes(length));
 
             case TAG_STRING:
-                return new StringTag(name, readTagString());
+                return new StringTag(name, readString(readUnsignedShort()));
 
             case TAG_LIST:
                 TagType childType = TagType.getById(readByte());
@@ -267,20 +272,6 @@ public class MinecraftInputBuffer {
             default:
                 throw new IOException("Invalid tag type: " + type + ".");
         }
-	}
-
-	private final String readTagString() throws IOException {
-		int length = readUnsignedShort();
-
-		if (length == -1) {
-			throw new IOException(Server.PREMATURE);
-		}
-		
-		else if (length == 0) {
-			return "";
-		}
-
-		return new String(readBytes(length));
 	}
 
     public final Slot readSlot() throws IOException {
@@ -376,8 +367,8 @@ public class MinecraftInputBuffer {
             case CRAFTING_SPECIAL_SHULKERBOXCOLORING:
                 return new CraftingSpecialShulkerBoxColoring(type, id);
 
-            case CRAFTING_SPECIAL_SUSPECIOUSSTEW:
-                return new CraftingSpecialSuspeciousStew(type, id);
+            case CRAFTING_SPECIAL_SUSPICIOUSSTEW:
+                return new CraftingSpecialSuspiciousStew(type, id);
 
             case SMELTING:
                 group = readString();
@@ -464,7 +455,81 @@ public class MinecraftInputBuffer {
         return new Ingredient(slots);
     }
 
+    public final Object readObject(Class<?> cls) throws IOException {
+        return readObject(cls, null);
+    }
+
+    public final Object readObject(Class<?> cls, String type) throws IOException {
+
+        if (type == null) {
+            if (cls.isAssignableFrom(boolean.class))          return readBoolean();   
+        
+            else if (cls.isAssignableFrom(byte.class))        return readByte();
+
+            else if (cls.isAssignableFrom(short.class))       return readShort();
+            
+            else if (cls.isAssignableFrom(int.class))         return readInt();
+
+            else if (cls.isAssignableFrom(float.class))       return readFloat();
+
+            else if (cls.isAssignableFrom(double.class))      return readDouble();
+
+            else if (cls.isAssignableFrom(long.class))        return readLong();
+
+            else if (cls.isAssignableFrom(String.class))      return readString();
+
+            else if (cls.isAssignableFrom(UUID.class))        return readUUID();
+
+            else if (cls.isAssignableFrom(Tag.class))         return readNBT();
+
+            else if (cls.isAssignableFrom(Slot.class))        return readSlot();
+
+            else if (cls.isAssignableFrom(Recipe.class))      return readRecipe();
+        } else {
+            if (cls.isAssignableFrom(short.class) && type.equals("angle"))       return readAngle();
+
+            else if (cls.isAssignableFrom(int.class) && type.equals("var"))      return readVarInt();
+
+            else if (cls.isAssignableFrom(int[].class) && type.equals("pos"))    return readPos();
+
+            else if (cls.isAssignableFrom(double.class) && type.equals("fixed")) return readFixedPointNumberInt();
+
+            else if (cls.isAssignableFrom(long.class) && type.equals("var"))     return readVarLong();
+        }
+        
+        throw new IOException("Class " + cls.getName() + ((type != null) ? " and type " + type : "") + " is not supported");
+    }
+
+    public final Object[] readObjectArray(Class<?> cls) throws IOException {
+        return readObjectArray(cls, null);
+    }
+
+    public final Object[] readObjectArray(Class<?> cls, String type) throws IOException {
+        int length = readVarInt();
+
+        Object[] objArray = (Object[]) Array.newInstance(cls, length);
+
+        for (int i = 0; i < length; i++) {
+            objArray[i] = readObject(cls, type);
+        }
+
+        return objArray;
+    }
+
     public int size() {
         return buffer.length;
+    }
+
+    public byte[] getBuffer() {
+        return buffer;
+    }
+
+    public byte[] getRemainingBuffer() {
+        int remainingSize = size() - pos;
+        byte[] b = new byte[remainingSize];
+
+        System.arraycopy(buffer, pos, b, pos, remainingSize);
+
+        return b;
     }
 }

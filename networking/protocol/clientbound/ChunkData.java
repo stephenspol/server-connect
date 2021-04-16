@@ -35,7 +35,7 @@ public class ChunkData {
                 boimes[i] = buffer.readVarInt();
                 // It goes X, Z, Y
                 if (i % 3 == 0) {
-                    log.log(packetInfo, "Boime {0}, X: {1}, Y:{2}, Z:{3}", new int[]{i, boimes[i-2], boimes[i], boimes[i-1]});
+                    log.log(packetInfo, "Boime {0}, X: {1}, Y:{2}, Z:{3}", new Object[]{i, boimes[i-2], boimes[i], boimes[i-1]});
                 }
             }
         }

@@ -14,7 +14,7 @@ public class OpenSignEditor {
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
         int[] pos = buffer.readPos();
 
-        log.log(packetInfo, "Edit sign at X: {0}, Y: {1}, Z: {2)", pos);
+        log.log(packetInfo, "Edit sign at X: {0}, Y: {1}, Z: {2}", new Object[]{pos[0], pos[1], pos[2]});
     }
     
 }

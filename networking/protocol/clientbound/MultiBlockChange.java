@@ -27,7 +27,7 @@ public class MultiBlockChange {
         short[][] blocks = new short[length][4];
 
         for (int i = 0; i < length; i++) {
-            long blockPosition = buffer.readLong();
+            long blockPosition = buffer.readVarLong();
 
             short id = (short) (blockPosition << 12);
             short x = (short) (blockPosition << 8);
@@ -39,7 +39,7 @@ public class MultiBlockChange {
             blocks[i][2] = z;
             blocks[i][3] = y;
 
-            log.log(packetInfo, "Block {0}: ID: {1}, X: {2}, Y: {4}, Z: {3}", blocks[i]);
+            log.log(packetInfo, "Block {0}: ID: {1}, X: {2}, Y: {4}, Z: {3}", new Object[]{i, id, x, y, z});
         }
     }
     

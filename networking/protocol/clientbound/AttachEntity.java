@@ -15,7 +15,7 @@ public class AttachEntity {
         int attachedEntityID = buffer.readVarInt();
         int holdingEntityID = buffer.readVarInt();
 
-        log.log(packetInfo, "Entity {0} is attached to {1}", new int[]{attachedEntityID, holdingEntityID});
+        log.log(packetInfo, "Entity {0} is attached to {1}", new Object[]{attachedEntityID, holdingEntityID});
     }
     
 }

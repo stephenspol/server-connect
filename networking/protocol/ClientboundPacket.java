@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import networking.stream.MinecraftInputBuffer;
 import networking.protocol.clientbound.*;
@@ -105,14 +107,35 @@ public enum ClientboundPacket {
     TAGS(0x5B, Tags.class);
 
     public static final Logger log = Logger.getLogger(ClientboundPacket.class.getName());
+    public static final Logger err = Logger.getLogger(ClientboundPacket.class.getName() + 2);
     public static final ConsoleHandler consoleHandler = new ConsoleHandler();
 
-	static {
-		log.setUseParentHandlers(false);
-		log.addHandler(consoleHandler);
+    public static final FileHandler fileHandler;
+    public static final FileHandler fileErrHandler;
 
-		log.setLevel(Level.FINER);
-		consoleHandler.setLevel(Level.FINER);
+	static {
+        try {
+            fileHandler = new FileHandler("Info Log - %u.txt");
+            fileErrHandler = new FileHandler("Error Log - %u.txt");
+
+            log.setUseParentHandlers(false);
+            log.addHandler(consoleHandler);
+            fileHandler.setFormatter(new SimpleFormatter());
+            log.addHandler(fileHandler);
+
+            err.setUseParentHandlers(false);
+            fileErrHandler.setFormatter(new SimpleFormatter());
+            err.addHandler(fileErrHandler);
+
+            log.setLevel(Level.FINER);
+            consoleHandler.setLevel(Level.FINER);
+            fileHandler.setLevel(Level.FINER);
+
+            err.setLevel(Level.WARNING);
+            fileErrHandler.setLevel(Level.WARNING);
+        } catch (IOException e) {
+            throw new ExceptionInInitializerError(e);   
+        }
 	}
 
     private final int id;
@@ -128,6 +151,12 @@ public enum ClientboundPacket {
         }
     }
 
+    /**
+     * Used to intialize a Packet and assign a ID to it.
+     * @deprecated Only used if packet is not assigned to a class
+     * @param id Packet ID
+     */
+    @Deprecated(forRemoval = false)
     ClientboundPacket(int id) {
         this(id, null);
     }
@@ -147,6 +176,7 @@ public enum ClientboundPacket {
         }
 
         try {
+            log.log(Level.FINE, "Class {0} being executed", clazz.getName());
             Method method = clazz.getMethod("execute", MinecraftInputBuffer.class);
 
             // Call null because method is static
