@@ -28,27 +28,18 @@ public class Equipment {
     }
 
     enum EquipmentType {
-        MAIN_HAND(0),
-        OFF_HAND(1),
-        BOOTS(2),
-        LEGGINGS(3),
-        CHESTPLATE(4),
-        HELMET(5);
+        MAIN_HAND,
+        OFF_HAND,
+        BOOTS,
+        LEGGINGS,
+        CHESTPLATE,
+        HELMET;
 
         private final String name;
-        private final int id;
+        
+        private static final EquipmentType[] BY_ID = values();
 
-        private static final EquipmentType[] BY_ID;
-
-        static {
-            BY_ID = new EquipmentType[6];
-            for (EquipmentType e : EquipmentType.values()) {
-                BY_ID[e.getId()] = e;
-            }
-        }
-
-        private EquipmentType(int id) {
-            this.id = id;
+        private EquipmentType() {
             this.name = name().toLowerCase().replace("_", " ");
         }
 
@@ -56,17 +47,13 @@ public class Equipment {
             return name;
         }
 
-        public int getId() {
-            return id;
-        }
-
         public static EquipmentType getById(int id) {
             if (id >= 0 && id < BY_ID.length) {
-                EquipmentType equipId = BY_ID[id];
-                if (equipId == null) {
+                EquipmentType equip = BY_ID[id];
+                if (equip == null) {
                     throw new IllegalArgumentException("Equipment id " + id + " is unknown!");
                 }
-                return equipId;
+                return equip;
             } else {
                 throw new IndexOutOfBoundsException("Equipment id " + id + " is out of bounds!");
             }

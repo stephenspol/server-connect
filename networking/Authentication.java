@@ -21,10 +21,10 @@ public class Authentication {
 	
 	private Logger log;
 	private File file;
-	private String path;
+	private static final String FILE_PATH = "Tokens.txt";
 	
-	private String type;
-	private String method;
+	private static final String TYPE_JSON = "application/json";
+	private static final String METHOD_POST = "POST";
 	private URL sessionServer;
 
 	private static final String CONTENT_TYPE = "Content-Type";
@@ -49,16 +49,11 @@ public class Authentication {
 		
 		sessionServer = new URL("https://sessionserver.mojang.com/session/minecraft/join");
 		
-		type = "application/json";
-		method = "POST";
-		
-		path = "Tokens.txt";
-		
-		file = new File(path);
+		file = new File(FILE_PATH);
 		
 		boolean fileCreated = file.createNewFile();
 
-		log.log(Level.FINE, "Created new file at {0}: {1}", new Object[] {path, fileCreated});
+		log.log(Level.FINE, "Created new file at {0}: {1}", new Object[] {FILE_PATH, fileCreated});
 
 		// Need to create Access Token
 		if (fileCreated)
@@ -146,7 +141,7 @@ public class Authentication {
 		}
 		
 		// Close stream once done using try with resource
-		try (FileOutputStream out = new FileOutputStream(path)) {
+		try (FileOutputStream out = new FileOutputStream(FILE_PATH)) {
 			
 			line = "Username: " + username + "\r\nName: " + name + "\r\nAccess Token: " + accessToken + "\r\nClient Token: " + clientToken + "\r\nUUID: " + UUID + "\r\n\r\n";
 			
@@ -216,8 +211,8 @@ public class Authentication {
 
 		HttpURLConnection conn = (HttpURLConnection) authServer.openConnection();
 		conn.setDoOutput(true);
-		conn.setRequestMethod(method);
-		conn.setRequestProperty(CONTENT_TYPE, type );
+		conn.setRequestMethod(METHOD_POST);
+		conn.setRequestProperty(CONTENT_TYPE, TYPE_JSON);
 		conn.setRequestProperty(CONTENT_LENGTH, String.valueOf(payload.length()));
 		conn.setUseCaches(false);
 

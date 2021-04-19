@@ -1,36 +1,23 @@
 package util;
 
 public enum SoundCategory {
-    MASTER(0),
-    MUSIC(1),
-    RECORD(2),
-    WEATHER(3),
-    BLOCK(4),
-    HOSTILE(5),
-    NEUTRAL(6),
-    PLAYER(7),
-    AMBIENT(8),
-    VOICE(9);
+    MASTER,
+    MUSIC,
+    RECORD,
+    WEATHER,
+    BLOCK,
+    HOSTILE,
+    NEUTRAL,
+    PLAYER,
+    AMBIENT,
+    VOICE;
 
-    private final int id;
     private final String name;
 
-    private static final SoundCategory[] BY_ID;
+    private static final SoundCategory[] BY_ID = values();
 
-    static {
-        BY_ID = new SoundCategory[10];
-        for (SoundCategory s : SoundCategory.values()) {
-            BY_ID[s.getId()] = s;
-        }
-    }
-
-    private SoundCategory(int id) {
-        this.id = id;
+    private SoundCategory() {
         this.name = name().toLowerCase();
-    }
-
-    public int getId() {
-        return id;
     }
 
     public String getName() {
@@ -39,11 +26,11 @@ public enum SoundCategory {
 
     public static SoundCategory getById(int id) {
         if (id >= 0 && id < BY_ID.length) {
-            SoundCategory soundId = BY_ID[id];
-            if (soundId == null) {
+            SoundCategory sound = BY_ID[id];
+            if (sound == null) {
                 throw new IllegalArgumentException("Sound id " + id + " is unknown!");
             }
-            return soundId;
+            return sound;
         } else {
             throw new IndexOutOfBoundsException("Sound id " + id + " is out of bounds!");
         }
