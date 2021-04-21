@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import networking.stream.MinecraftInputBuffer;
-import networking.protocol.clientbound.*;
+import networking.protocol.clientbound.play.*;
 
 public enum ClientboundPacket {
     SPAWN_ENTITY(0x00, SpawnEntity.class),
@@ -101,7 +101,7 @@ public enum ClientboundPacket {
     NBT_QUERY_RESPONSE(0x54, NBTQueryResponse.class),
     COLLECT_ITEM(0x55, CollectItem.class),
     ENTITY_TELEPORT(0x56, EntityTeleport.class),
-    ADVANCEMENTS(0x57),
+    ADVANCEMENTS(0x57, Advancements.class),
     ENTITY_PROPERTIES(0x58, EntityProperties.class),
     ENTITY_EFFECT(0x59, EntityEffect.class),
     DECLARE_RECIPES(0x5A, DeclareRecipes.class),
@@ -145,15 +145,8 @@ public enum ClientboundPacket {
     private final int id;
     private Class<?> clazz;
 
-    private static final ClientboundPacket[] BY_ID;
+    private static final ClientboundPacket[] BY_ID = values();
     public static final Level packetInfo = Level.FINER;
-
-    static {
-        BY_ID = new ClientboundPacket[0x5C];
-        for (ClientboundPacket p : ClientboundPacket.values()) {
-            BY_ID[p.getId()] = p;
-        }
-    }
 
     /**
      * Used to intialize a Packet and assign a ID to it.

@@ -12,6 +12,8 @@ import java.util.UUID;
 
 import networking.Server;
 import util.Slot;
+import util.advancement.Advancement;
+import util.advancement.AdvancementDisplay;
 import util.recipe.*;
 import nbt.*;
 
@@ -226,19 +228,19 @@ public class MinecraftInputBuffer {
                 TagType childType = TagType.getById(readByte());
                 length = readInt();
 
-                Class<?> clazz = childType.getTagClass();
+                Class<?> cls = childType.getTagClass();
                 List<Tag<?>> tagList = new ArrayList<>(length);
                 for (int i = 0; i < length; i++) {
                     Tag<?> tag = readTagPayload(childType, "", depth + 1);
                     if (tag instanceof EndTag) {
                         throw new IOException("TAG_End not permitted in a list.");
-                    } else if (!clazz.isInstance(tag)) {
+                    } else if (!cls.isInstance(tag)) {
                         throw new IOException("Mixed tag types within a list.");
                     }
                     tagList.add(tag);
                 }
 
-                return new ListTag(name, clazz, tagList);
+                return new ListTag(name, cls, tagList);
 
             case TAG_COMPOUND:
 				Map<String, Tag<?>> compoundTagList = new HashMap<>();
@@ -453,6 +455,94 @@ public class MinecraftInputBuffer {
         }
 
         return new Ingredient(slots);
+    }
+
+    public final Advancement readAdvancement() throws IOException {
+        boolean hasParent = readBoolean();
+
+        String parentID = null;
+
+        if (hasParent) {
+            parentID = readString();
+        }
+
+        boolean hasDisplay = readBoolean();
+
+        AdvancementDisplay display = null;
+
+        if (hasDisplay) {
+            display = readAdvancementDisplay();
+        }
+
+        int length = readVarInt();
+
+        String[] criterias = new String[length];
+
+        for (int i = 0; i < length; i++) {
+            criterias[i] =  readString();
+        }
+
+        length = readVarInt();
+
+        int length2 = readVarInt();
+
+        String[][] requierments = new String[length][length2];
+
+        for (int i = 0; i < length2; i++) {
+            for (int j = 0; j < length; j++) {
+                requierments[i][j] = readString();
+            }
+        }
+
+        return new Advancement(parentID, display, criterias, requierments);
+    }
+
+    private final AdvancementDisplay readAdvancementDisplay() throws IOException {
+        String title = readString();
+        String description = readString();
+
+        Slot icon = readSlot();
+
+        int frameTypeEnum = readVarInt();
+
+        String frameType;
+
+        if (frameTypeEnum == 0) frameType = "task";       
+        else if (frameTypeEnum == 1) frameType = "challenge";
+        else if (frameTypeEnum == 2) frameType = "goal";
+        else throw new IOException("Frame Type " + frameTypeEnum + " is no a valid type!");
+
+        byte flags = (byte) readInt();
+        String backgroundTexture = null;
+
+        if (Server.getBit(flags, 0)) backgroundTexture = readString();
+
+        float x = readFloat();
+        float y = readFloat();
+
+        return new AdvancementDisplay(title, description, icon, frameType, flags, backgroundTexture, x, y);
+    }
+
+    public final Map<String, Long> readAdvancementProgress() throws IOException {
+        int length = readVarInt();
+
+        Map<String, Long> advancementProgress = new HashMap<>();
+
+        for (int i = 0; i < length; i++) {
+            String name = readString();
+
+            boolean achieved = readBoolean();
+
+            Long date = null;
+
+            if (achieved) {
+                date = readLong();
+            }
+
+            advancementProgress.put(name, date);
+        }
+
+        return advancementProgress;
     }
 
     public final Object readObject(Class<?> cls) throws IOException {
