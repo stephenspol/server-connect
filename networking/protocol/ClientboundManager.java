@@ -17,14 +17,20 @@ public class ClientboundManager implements Runnable {
     private final Socket socket;
     private final DataInputStream in;
 
-    public ClientboundManager(Socket socket) throws IOException {
+    private int state;
+
+    public ClientboundManager(Socket socket, int state) throws IOException {
         this.socket = socket;
 
         in = new DataInputStream(socket.getInputStream());
+
+        this.state = state;
     }
 
     @Override
     public void run() {
+
+        ClientboundPacket packet = new ClientboundPacket(state);
 
         while (!socket.isClosed()) {
 
@@ -39,11 +45,15 @@ public class ClientboundManager implements Runnable {
                 log.log(Level.FINE, "Reading packetID:0x{0}, Size: {1} Bytes\n", 
                         new Object[]{Integer.toHexString(packetId).toUpperCase(), buffer.size()});
 
-                ClientboundPacket.getById(packetId).execute(buffer);
+                packet.execute(buffer, packetId);
+
+                if (state == 1 && packetId == 0x02) {
+                    packet.setState(2);
+                }
 
             } catch (EOFException e) {
                 try {
-                    log.log(Level.SEVERE, "Stream has closed, closing socket...", e);
+                    log.log(Level.WARNING, "Stream has closed, closing socket...", e);
                     socket.close();
                 } catch (IOException e2) {
                     
@@ -56,8 +66,10 @@ public class ClientboundManager implements Runnable {
                 log.log(Level.SEVERE, "A IOException has occured!", e);
                 err.log(Level.SEVERE, "A IOException has occured!\n", e);
 
-                err.log(Level.WARNING, "Packet Dump of packetID {0}: {1}", 
-                        new Object[]{"0x" + Integer.toHexString(packetId).toUpperCase(), Arrays.toString(buffer.getBuffer())});
+                if (buffer != null) {
+                    err.log(Level.WARNING, "Packet Dump of packetID {0}: {1}", 
+                            new Object[]{"0x" + Integer.toHexString(packetId).toUpperCase(), Arrays.toString(buffer.getBuffer())});
+                }
             }
         }
 

@@ -51,7 +51,6 @@ public class Server {
             log.info("Connection to server successful!\n");
 
             MinecraftOutputStream output = new MinecraftOutputStream(socket.getOutputStream());
-            DataInputStream input = new DataInputStream(socket.getInputStream());
 
             log.log(Level.FINE, "Attempting handshake with {0}...", host.getAddress());
             byte[] handshakeMessage = Protocol.createHandshakeMessage(address, port, 1);
@@ -66,20 +65,9 @@ public class Server {
             output.writeByte(0x00); //packet id for ping
             log.fine("Status request sent\n");
 
-            // S->C : Response
-            MinecraftInputBuffer buffer = new MinecraftInputBuffer(input);
+			Thread status = new Thread(new ClientboundManager(socket, 0));
 
-            int packetId = buffer.readVarInt();
-
-            if (packetId == -1) {
-                log.severe(PREMATURE);
-            }
-
-            else if (packetId != 0x00) { //we want a status response
-                log.severe(INVALID_PACKET);
-            }
-			
-            String json = buffer.readString();
+			status.start();
 
             // C->S : Ping
             long now = System.currentTimeMillis();
@@ -88,26 +76,16 @@ public class Server {
             output.writeLong(now); //time
             log.fine("Pinging server...");
 
-            // S->C : Pong
-            buffer = new MinecraftInputBuffer(input);
-            packetId = buffer.readVarInt();
-
-            if (packetId == -1) {
-                log.severe(PREMATURE);
-            }
-
-            else if (packetId != 0x01) {
-                log.severe(INVALID_PACKET);
-            }
-
-            long pingtime = buffer.readLong(); //read response
-
-            log.log(Level.FINE, "Pong time: {0}ms\n", pingtime);
-            // print out server info
-            log.log(Level.FINER, "Server response: {0}\n", json);
+            while(status.isAlive()) {
+				Thread.sleep(1000);
+			}
 
             log.info("Status Ping Completed!\n");
-        }
+        } catch (InterruptedException e) {
+			log.log(Level.WARNING, "Thread Interrupted", e);
+			
+			Thread.currentThread().interrupt();
+		}
     }
 
     public void connect(int timeout) throws IOException {
@@ -156,7 +134,6 @@ public class Server {
 			log.info("Connection Completed!\n");
 
 			MinecraftOutputStream output = new MinecraftOutputStream(socket.getOutputStream());
-			DataInputStream input = new DataInputStream(socket.getInputStream());
 
 			log.log(Level.FINE, "Attempting handshake with {0}...", host.getAddress());
 			byte[] handshakeMessage = Protocol.createHandshakeMessage(address, port, 2);
@@ -185,109 +162,9 @@ public class Server {
 				// C->S : Encryption Response
 			}
 			
-			// S->C : Set Compression (optional)
-			MinecraftInputBuffer buffer = new MinecraftInputBuffer(input);
-			int size = buffer.size();
-			int packetId = buffer.readVarInt();
+			Thread play = new Thread(new ClientboundManager(socket, 1));
 
-			// Set Compression ID == 3
-			if (packetId == 3) {
-				
-				if (size == -1) {
-					log.severe(PREMATURE);
-				}
-
-				if (size == 0) {
-					log.severe(INVALID_LENGTH);
-				}
-				
-				int data = buffer.readVarInt();
-				
-				log.log(Level.FINE, "Compression size: {0}", data);
-				
-				// if received set compression packet and is not a negative number, enable compression
-
-				buffer = new MinecraftInputBuffer(input);
-				packetId = buffer.readVarInt();
-			}
-
-			
-			// S->C : Login Success
-			UUID uuid = buffer.readUUID();
-
-			log.log(Level.INFO, "Player UUID: {0}", uuid);
-			
-			String json = buffer.readString();
-			
-			log.log(Level.INFO, "Name: {0}\n", json);
-
-            log.info("Login Complete!\n");
-
-			// <-------------- Start Play Mode ---------------->
-			
-			Thread t = new Thread(new ClientboundManager(socket));
-
-			t.start();
-			
-			
-			// S->C : Join Game
-			/*log.info("Joined Game!\n");
-			size = input.readVarInt();
-			packetId = input.readVarInt();
-
-			if (packetId == -1) {
-				log.severe(PREMATURE);
-			}
-
-			if (size == -1) {
-				log.severe(PREMATURE);
-			}
-
-			if (size == 0) {
-				log.severe(INVALID_LENGTH);
-			}
-
-			Protocol.joinGame(input);
-			
-			// S->C : Plugin Message (Optional)
-			size = input.readVarInt();
-			packetId = input.readVarInt();
-			
-			if (packetId == -1) {
-				log.severe(PREMATURE);
-			}
-
-			Protocol.pluginMessage(input);
-			
-			// S->C : Server Difficulty (Optional)
-			size = input.readVarInt();
-			packetId = input.readVarInt();
-
-			if (packetId == -1) {
-				log.severe(PREMATURE);
-			}
-			
-			Protocol.serverDifficulty(input);
-			
-			// S->C : Spawn Position
-			size = input.readVarInt();
-			packetId = input.readVarInt();
-
-			if (packetId == -1) {
-				log.severe(PREMATURE);
-			}
-
-			Protocol.spawnPostion(input);
-			
-			// S->C : Player Abilities
-			size = input.readVarInt();
-			packetId = input.readVarInt();
-
-			if (packetId == -1) {
-				log.severe(PREMATURE);
-			}
-			
-			Protocol.playerAbilities(input); */
+			play.start();
 			
 			// C->S : Plugin Message (Optional) follow up from server plugin messasge
 			/*buffer = new ByteArrayOutputStream();
@@ -448,11 +325,11 @@ public class Server {
 			}*/
 
 			// Keep main thread stuck in a loop to not kill socket while other thread is running
-			while(t.isAlive()) {
+			while(play.isAlive()) {
 				Thread.sleep(1000);
 			}
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			log.log(Level.WARNING, "Thread Interrupted", e);
 			
 			Thread.currentThread().interrupt();
 		}

@@ -1,4 +1,4 @@
-package networking.protocol.clientbound.play;
+package networking.protocol.clientbound.login;
 
 import java.io.IOException;
 
@@ -6,15 +6,15 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x19 Play / 0x00 Login | S->C
-public class Disconnect {
+// Packet ID 0x03 | S->C
+public class SetCompression {
 
-    private Disconnect() {}
+    private SetCompression() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        String reason = buffer.readString();
+        int threshold = buffer.readVarInt();
 
-        log.log(packetInfo, "Disconnected, Reason: {0}", reason);
+        log.log(packetInfo, "Compression Threshold: {0}", threshold);
     }
     
 }

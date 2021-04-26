@@ -1,4 +1,4 @@
-package networking.protocol.clientbound.play;
+package networking.protocol.clientbound.status;
 
 import java.io.IOException;
 
@@ -6,15 +6,15 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.stream.MinecraftInputBuffer;
 
-// Packet ID 0x19 Play / 0x00 Login | S->C
-public class Disconnect {
+// Packet ID 0x00 | S->C
+public class Response {
 
-    private Disconnect() {}
+    private Response() {}
 
     public static void execute(MinecraftInputBuffer buffer) throws IOException{
-        String reason = buffer.readString();
+        String json = buffer.readString();
 
-        log.log(packetInfo, "Disconnected, Reason: {0}", reason);
+        log.log(packetInfo, "Server response: {0}", json);
     }
     
 }

@@ -545,65 +545,76 @@ public class MinecraftInputBuffer {
         return advancementProgress;
     }
 
-    public final Object readObject(Class<?> cls) throws IOException {
-        return readObject(cls, null);
+    public final <T> T read(Class<T> cls) throws IOException {
+        return read(cls, null);
     }
 
-    public final Object readObject(Class<?> cls, String type) throws IOException {
+    public final <T> T read(Class<T> cls, String type) throws IOException {
 
         if (type == null) {
-            if (cls.isAssignableFrom(boolean.class))          return readBoolean();   
+            if (cls.isAssignableFrom(boolean.class))          return cls.cast(readBoolean());   
         
-            else if (cls.isAssignableFrom(byte.class))        return readByte();
+            else if (cls.isAssignableFrom(byte.class))        return cls.cast(readByte());
 
-            else if (cls.isAssignableFrom(short.class))       return readShort();
+            else if (cls.isAssignableFrom(short.class))       return cls.cast(readShort());
             
-            else if (cls.isAssignableFrom(int.class))         return readInt();
+            else if (cls.isAssignableFrom(int.class))         return cls.cast(readInt());
 
-            else if (cls.isAssignableFrom(float.class))       return readFloat();
+            else if (cls.isAssignableFrom(float.class))       return cls.cast(readFloat());
 
-            else if (cls.isAssignableFrom(double.class))      return readDouble();
+            else if (cls.isAssignableFrom(double.class))      return cls.cast(readDouble());
 
-            else if (cls.isAssignableFrom(long.class))        return readLong();
+            else if (cls.isAssignableFrom(long.class))        return cls.cast(readLong());
 
-            else if (cls.isAssignableFrom(String.class))      return readString();
+            else if (cls.isAssignableFrom(String.class))      return cls.cast(readString());
 
-            else if (cls.isAssignableFrom(UUID.class))        return readUUID();
+            else if (cls.isAssignableFrom(UUID.class))        return cls.cast(readUUID());
 
-            else if (cls.isAssignableFrom(Tag.class))         return readNBT();
+            else if (cls.isAssignableFrom(Tag.class))         return cls.cast(readNBT());
 
-            else if (cls.isAssignableFrom(Slot.class))        return readSlot();
+            else if (cls.isAssignableFrom(Slot.class))        return cls.cast(readSlot());
 
-            else if (cls.isAssignableFrom(Recipe.class))      return readRecipe();
+            else if (cls.isAssignableFrom(Recipe.class))      return cls.cast(readRecipe());
+
+            else if (cls.isAssignableFrom(Advancement.class)) return cls.cast(readAdvancement());
         } else {
-            if (cls.isAssignableFrom(short.class) && type.equals("angle"))       return readAngle();
+            if (cls.isAssignableFrom(short.class) && type.equals("angle"))       return cls.cast(readAngle());
 
-            else if (cls.isAssignableFrom(int.class) && type.equals("var"))      return readVarInt();
+            else if (cls.isAssignableFrom(int.class) && type.equals("var"))      return cls.cast(readVarInt());
 
-            else if (cls.isAssignableFrom(int[].class) && type.equals("pos"))    return readPos();
+            else if (cls.isAssignableFrom(int[].class) && type.equals("pos"))    return cls.cast(readPos());
 
-            else if (cls.isAssignableFrom(double.class) && type.equals("fixed")) return readFixedPointNumberInt();
+            else if (cls.isAssignableFrom(double.class) && type.equals("fixed")) return cls.cast(readFixedPointNumberInt());
 
-            else if (cls.isAssignableFrom(long.class) && type.equals("var"))     return readVarLong();
+            else if (cls.isAssignableFrom(long.class) && type.equals("var"))     return cls.cast(readVarLong());
         }
         
         throw new IOException("Class " + cls.getName() + ((type != null) ? " and type " + type : "") + " is not supported");
     }
 
-    public final Object[] readObjectArray(Class<?> cls) throws IOException {
-        return readObjectArray(cls, null);
+    public final <T> T[] readArray(Class<T> cls) throws IOException {
+        return readArray(cls, null);
     }
 
-    public final Object[] readObjectArray(Class<?> cls, String type) throws IOException {
-        int length = readVarInt();
+    public final <T> T[] readArray(Class<T> cls, int length) throws IOException {
+        return readArray(cls, null, length);
+    }
 
-        Object[] objArray = (Object[]) Array.newInstance(cls, length);
+    public final <T> T[] readArray(Class<T> cls, String type) throws IOException {
+        return readArray(cls, type, readVarInt());
+    }
+
+    // Java does not support Autoboxing arrays which can cause problems
+    @SuppressWarnings("unchecked")
+    public final <T> T[] readArray(Class<T> cls, String type, int length) throws IOException {
+        T[] genericArray = (T[]) Array.newInstance(cls, length);
 
         for (int i = 0; i < length; i++) {
-            objArray[i] = readObject(cls, type);
+            Array.set(genericArray, i, read(cls, type));
+            //genericArray[i] = read(cls, type);
         }
 
-        return objArray;
+        return genericArray;
     }
 
     public int size() {
@@ -614,12 +625,9 @@ public class MinecraftInputBuffer {
         return buffer;
     }
 
-    public byte[] getRemainingBuffer() {
-        int remainingSize = size() - pos;
-        byte[] b = new byte[remainingSize];
-
-        System.arraycopy(buffer, pos, b, pos, remainingSize);
-
-        return b;
+    public byte[] readFully() {
+        int remainingSize = (size() - 1) - pos;
+        
+        return readBytes(remainingSize);
     }
 }
