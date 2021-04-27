@@ -3,9 +3,10 @@ package networking.protocol.clientbound.login;
 import java.io.IOException;
 import java.util.Arrays;
 
+import networking.buffer.MinecraftInputBuffer;
+
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
-import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x01 | S->C
 public class EncryptionRequest {

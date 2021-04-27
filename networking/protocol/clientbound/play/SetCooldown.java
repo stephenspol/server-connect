@@ -2,9 +2,10 @@ package networking.protocol.clientbound.play;
 
 import java.io.IOException;
 
+import networking.buffer.MinecraftInputBuffer;
+
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
-import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x16 | S->C
 public class SetCooldown {

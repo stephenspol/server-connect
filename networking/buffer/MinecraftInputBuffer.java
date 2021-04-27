@@ -1,4 +1,4 @@
-package networking.stream;
+package networking.buffer;
 
 import java.io.DataInputStream;
 import java.io.EOFException;

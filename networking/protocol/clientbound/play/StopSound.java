@@ -6,7 +6,7 @@ import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 
 import networking.Server;
-import networking.stream.MinecraftInputBuffer;
+import networking.buffer.MinecraftInputBuffer;
 import util.SoundCategory;
 
 // Packet ID 0x52 | S->C

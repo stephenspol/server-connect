@@ -5,7 +5,7 @@ import java.io.IOException;
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import networking.Server;
-import networking.stream.MinecraftInputBuffer;
+import networking.buffer.MinecraftInputBuffer;
 
 // Packet ID 0x30 | S->C
 public class PlayerAbilities {

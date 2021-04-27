@@ -5,7 +5,7 @@ import java.io.IOException;
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
 import nbt.Tag;
-import networking.stream.MinecraftInputBuffer;
+import networking.buffer.MinecraftInputBuffer;
 
 // Packet ID 0x24 | S->C
 public class JoinGame {

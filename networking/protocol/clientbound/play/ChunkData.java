@@ -3,10 +3,10 @@ package networking.protocol.clientbound.play;
 import java.io.IOException;
 
 import nbt.Tag;
+import networking.buffer.MinecraftInputBuffer;
 
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
-import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x20 | S->C
 public class ChunkData {

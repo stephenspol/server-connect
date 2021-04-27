@@ -7,10 +7,10 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.logging.Level;
 
+import networking.buffer.MinecraftInputBuffer;
+
 import static networking.protocol.ClientboundPacket.log;
 import static networking.protocol.ClientboundPacket.err;
-
-import networking.stream.MinecraftInputBuffer;
 
 public class ClientboundManager implements Runnable {
 

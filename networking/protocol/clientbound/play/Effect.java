@@ -2,9 +2,11 @@ package networking.protocol.clientbound.play;
 
 import java.io.IOException;
 
+import networking.buffer.MinecraftInputBuffer;
+
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
-import networking.stream.MinecraftInputBuffer;
+
 import util.EffectType;
 
 // Packet ID 0x21 | S->C

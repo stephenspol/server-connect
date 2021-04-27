@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
 
+import networking.buffer.MinecraftInputBuffer;
+
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
-import networking.stream.MinecraftInputBuffer;
+
 import util.Modifier;
 import util.Property;
 

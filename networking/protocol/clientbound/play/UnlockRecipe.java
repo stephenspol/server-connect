@@ -3,9 +3,10 @@ package networking.protocol.clientbound.play;
 import java.io.IOException;
 import java.util.Arrays;
 
+import networking.buffer.MinecraftInputBuffer;
+
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
-import networking.stream.MinecraftInputBuffer;
 
 // Packet ID 0x35 | S->C
 public class UnlockRecipe {

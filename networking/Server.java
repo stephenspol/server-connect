@@ -7,9 +7,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.*;
 import java.net.*;
-import java.util.UUID;
 
-import networking.stream.*;
+import networking.buffer.*;
 import networking.protocol.ClientboundManager;
 import networking.protocol.Protocol;
 import main.Main;
@@ -50,19 +49,22 @@ public class Server {
             socket.connect(host, timeout); // 3000 is standard for timeout
             log.info("Connection to server successful!\n");
 
-            MinecraftOutputStream output = new MinecraftOutputStream(socket.getOutputStream());
+			DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+			MinecraftOutputBuffer buffer = new MinecraftOutputBuffer();
 
             log.log(Level.FINE, "Attempting handshake with {0}...", host.getAddress());
             byte[] handshakeMessage = Protocol.createHandshakeMessage(address, port, 1);
 
             // C->S : Handshake State=1
-            output.writeVarInt(handshakeMessage.length);
-            output.write(handshakeMessage);
+            buffer.writeVarInt(handshakeMessage.length);
+            buffer.writeBytes(handshakeMessage);
+			output.write(buffer.getBytes());
             log.fine("Handshake sent\n");
 
             // C->S : Request
-            output.writeByte(0x01); //size is one
-            output.writeByte(0x00); //packet id for ping
+            buffer.writeByte(0x01); //size is one
+            buffer.writeByte(0x00); //packet id for ping
+			output.write(buffer.getBytes());
             log.fine("Status request sent\n");
 
 			Thread status = new Thread(new ClientboundManager(socket, 0));
@@ -71,9 +73,10 @@ public class Server {
 
             // C->S : Ping
             long now = System.currentTimeMillis();
-            output.writeByte(0x09); //size of packet
-            output.writeByte(0x01); //0x01 for ping
-            output.writeLong(now); //time
+            buffer.writeByte(0x09); //size of packet
+            buffer.writeByte(0x01); //0x01 for ping
+            buffer.writeLong(now); //time
+			output.write(buffer.getBytes());
             log.fine("Pinging server...");
 
             while(status.isAlive()) {
@@ -133,27 +136,29 @@ public class Server {
 			socket.connect(host, timeout);
 			log.info("Connection Completed!\n");
 
-			MinecraftOutputStream output = new MinecraftOutputStream(socket.getOutputStream());
+			DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+			MinecraftOutputBuffer buffer = new MinecraftOutputBuffer();
 
 			log.log(Level.FINE, "Attempting handshake with {0}...", host.getAddress());
 			byte[] handshakeMessage = Protocol.createHandshakeMessage(address, port, 2);
 
 			// C->S : Handshake State=2
-			output.writeVarInt(handshakeMessage.length);
-			output.write(handshakeMessage);
+			buffer.writeVarInt(handshakeMessage.length);
+			buffer.writeBytes(handshakeMessage);
+			output.write(buffer.getBytes());
 			log.fine("Handshake sent\n");
 			
 			// C->S : Login Start
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-			MinecraftOutputStream string = new MinecraftOutputStream(out);
+			MinecraftOutputBuffer string = new MinecraftOutputBuffer();
 			string.writeByte(0x00); //packet id
 			string.writeString(name, StandardCharsets.UTF_8);
 
-			byte[] userInfo = out.toByteArray();
+			byte[] userInfo = string.getBytes();
 
-			output.writeVarInt(userInfo.length);
-			output.write(userInfo);
+			buffer.writeVarInt(userInfo.length);
+			buffer.writeBytes(userInfo);
+
+			output.write(buffer.getBytes());
 
 			if (!address.equals("127.0.0.1"))
 			{

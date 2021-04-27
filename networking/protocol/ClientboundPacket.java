@@ -10,7 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import networking.stream.MinecraftInputBuffer;
+import networking.buffer.MinecraftInputBuffer;
 import networking.protocol.clientbound.login.*;
 import networking.protocol.clientbound.play.*;
 import networking.protocol.clientbound.status.*;

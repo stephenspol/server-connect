@@ -3,9 +3,11 @@ package networking.protocol.clientbound.play;
 import java.io.IOException;
 import java.util.UUID;
 
+import networking.buffer.MinecraftInputBuffer;
+
 import static networking.protocol.ClientboundPacket.packetInfo;
 import static networking.protocol.ClientboundPacket.log;
-import networking.stream.MinecraftInputBuffer;
+
 import util.Player;
 import util.PlayerProperty;
 
