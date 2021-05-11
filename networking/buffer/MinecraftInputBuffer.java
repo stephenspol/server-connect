@@ -193,7 +193,7 @@ public class MinecraftInputBuffer {
 
         return readTagPayload(type, name, depth);
     }
-
+    
 	private final Tag<?> readTagPayload(TagType type, String name, int depth) throws IOException {
 		switch (type) {
             case TAG_END:

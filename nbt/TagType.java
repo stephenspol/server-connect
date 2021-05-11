@@ -34,6 +34,7 @@ public enum TagType {
 
     private final Class<?> tagClass;
     private final String typeName;
+    private final int id;
 
     private static final Map<Class<?>, TagType> BY_CLASS = new HashMap<>();
     private static final Map<String, TagType> BY_NAME = new HashMap<>();
@@ -49,6 +50,7 @@ public enum TagType {
     private TagType (String typeName, Class<?> tagClass) {
         this.tagClass = tagClass;
         this.typeName = typeName;
+        this.id = values().length;
     }
 
     public Class<?> getTagClass() {
@@ -59,7 +61,11 @@ public enum TagType {
         return typeName;
     }
 
-    public static TagType getByTagClass(Class<? extends Tag<?>> clazz) {
+    public int getId() {
+        return id;
+    }
+
+    public static TagType getByTagClass(Class<?> clazz) {
         TagType ret = BY_CLASS.get(clazz);
         if (ret == null) {
             throw new IllegalArgumentException("Tag type " + clazz + " is unknown!");

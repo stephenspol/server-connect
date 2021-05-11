@@ -10,7 +10,8 @@ import java.net.*;
 
 import networking.buffer.*;
 import networking.protocol.ClientboundManager;
-import networking.protocol.Protocol;
+import networking.protocol.serverbound.handshake.Handshake;
+import networking.protocol.serverbound.status.*;
 import main.Main;
 
 public class Server {
@@ -50,33 +51,21 @@ public class Server {
             log.info("Connection to server successful!\n");
 
 			DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-			MinecraftOutputBuffer buffer = new MinecraftOutputBuffer();
-
-            log.log(Level.FINE, "Attempting handshake with {0}...", host.getAddress());
-            byte[] handshakeMessage = Protocol.createHandshakeMessage(address, port, 1);
 
             // C->S : Handshake State=1
-            buffer.writeVarInt(handshakeMessage.length);
-            buffer.writeBytes(handshakeMessage);
-			output.write(buffer.getBytes());
+			output.write(Handshake.execute(address, port, 1));
             log.fine("Handshake sent\n");
 
             // C->S : Request
-            buffer.writeByte(0x01); //size is one
-            buffer.writeByte(0x00); //packet id for ping
-			output.write(buffer.getBytes());
+			output.write(Request.execute());
             log.fine("Status request sent\n");
 
-			Thread status = new Thread(new ClientboundManager(socket, 0));
+			Thread status = new Thread(new ClientboundManager(socket, 1));
 
 			status.start();
 
             // C->S : Ping
-            long now = System.currentTimeMillis();
-            buffer.writeByte(0x09); //size of packet
-            buffer.writeByte(0x01); //0x01 for ping
-            buffer.writeLong(now); //time
-			output.write(buffer.getBytes());
+			output.write(Ping.execute());
             log.fine("Pinging server...");
 
             while(status.isAlive()) {
@@ -139,13 +128,8 @@ public class Server {
 			DataOutputStream output = new DataOutputStream(socket.getOutputStream());
 			MinecraftOutputBuffer buffer = new MinecraftOutputBuffer();
 
-			log.log(Level.FINE, "Attempting handshake with {0}...", host.getAddress());
-			byte[] handshakeMessage = Protocol.createHandshakeMessage(address, port, 2);
-
 			// C->S : Handshake State=2
-			buffer.writeVarInt(handshakeMessage.length);
-			buffer.writeBytes(handshakeMessage);
-			output.write(buffer.getBytes());
+			output.write(Handshake.execute(address, port, 2));
 			log.fine("Handshake sent\n");
 			
 			// C->S : Login Start
@@ -167,7 +151,7 @@ public class Server {
 				// C->S : Encryption Response
 			}
 			
-			Thread play = new Thread(new ClientboundManager(socket, 1));
+			Thread play = new Thread(new ClientboundManager(socket, 2));
 
 			play.start();
 			

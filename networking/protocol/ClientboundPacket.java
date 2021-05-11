@@ -33,8 +33,8 @@ public class ClientboundPacket {
             // Create logs directory if it does not exist
             new File("logs").mkdir();
 
-            fileHandler = new FileHandler("logs/Info Log - %u.txt");
-            fileErrHandler = new FileHandler("logs/Error Log - %u.txt");
+            fileHandler = new FileHandler("logs/Clientbound Info Log - %u.txt");
+            fileErrHandler = new FileHandler("logs/Clientbound Error Log - %u.txt");
 
             log.setUseParentHandlers(false);
             log.addHandler(consoleHandler);
@@ -65,20 +65,20 @@ public class ClientboundPacket {
 
     public void execute(MinecraftInputBuffer buffer, int packetId) throws IOException {
         switch (state) {
-            case 0:
+            case 1:
                 Status.getById(packetId).execute(buffer);
                 break;
 
-            case 1:
+            case 2:
                 Login.getById(packetId).execute(buffer);
                 break;
 
-            case 2:
+            case 3:
                 Play.getById(packetId).execute(buffer);
                 break;
 
             default:
-                throw new IllegalArgumentException("Status " + state + " is a invalid!");
+                throw new IllegalArgumentException("State " + state + " is a invalid!");
         } 
     }
 

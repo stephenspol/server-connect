@@ -47,8 +47,8 @@ public class ClientboundManager implements Runnable {
 
                 packet.execute(buffer, packetId);
 
-                if (state == 1 && packetId == 0x02) {
-                    packet.setState(2);
+                if (state == 2 && packetId == 0x02) {
+                    packet.setState(3);
                 }
 
             } catch (EOFException e) {
