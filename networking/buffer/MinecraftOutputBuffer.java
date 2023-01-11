@@ -33,8 +33,6 @@ public class MinecraftOutputBuffer {
 			bytes[i] = buffer.get(i);
 		}
 
-		buffer.clear();
-
 		return bytes;
 	}
 
@@ -144,7 +142,8 @@ public class MinecraftOutputBuffer {
 	}
 
 	public final void writeNBT(Tag<?> tag) {
-		writeByte(tag.getTagType().getId());
+		int id = TagType.getIdByTagType(tag.getTagType());
+		writeByte(id);
 
 		if (tag.getTagType() != TagType.TAG_END) {
 			writeTagString(tag.getName());
@@ -196,9 +195,11 @@ public class MinecraftOutputBuffer {
 				ListTag<?> listTag = (ListTag<?>) tag;
 				Class<?> cls = listTag.getElementType();
 
-				List<Tag<?>> tags = (List<Tag<?>>) listTag.getValue();
+				List<? extends Tag<?>> tags = listTag.getValue();
+
+				int id = TagType.getIdByTagType(TagType.getByTagClass(cls));
 				
-				writeByte(TagType.getByTagClass(cls).getId());
+				writeByte(id);
 				writeInt(tags.size());
 
 				for (Tag<?> t : tags) {
@@ -213,7 +214,9 @@ public class MinecraftOutputBuffer {
 					writeNBT(childTag);
 				}
 
-				writeByte(TagType.TAG_END.getId());
+				id = TagType.getIdByTagType(TagType.TAG_END);
+
+				writeByte(id);
 				break;
 
 			case TAG_INT_ARRAY:

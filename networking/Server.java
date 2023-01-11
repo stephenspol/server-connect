@@ -1,44 +1,50 @@
 package networking;
 
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import java.io.*;
 import java.net.*;
 
-import networking.buffer.*;
 import networking.protocol.ClientboundManager;
-import networking.protocol.serverbound.handshake.Handshake;
-import networking.protocol.serverbound.status.*;
+import networking.protocol.ServerboundManager;
 import main.Main;
 
 public class Server {
 
     private final Logger log = Logger.getLogger(Server.class.getName());
     private final ConsoleHandler consoleHandler = new ConsoleHandler();
+	private final FileHandler fileHandler;
 
-    private String address;
-    private int port;
-
-    private InetSocketAddress host;
+    private final InetSocketAddress host;
 
     public static final String PREMATURE = "Premature end of stream.";
 	public static final String INVALID_LENGTH = "Invalid string length.";
 	public static final String INVALID_PACKET = "Invalid packetID.";
 
     public Server (String address, int port) {
-        log.setUseParentHandlers(false);
-        log.addHandler(consoleHandler);
 
-        log.setLevel(Level.FINER);
-        consoleHandler.setLevel(Level.FINER);
+		try {
+			new File("logs").mkdir();
 
-        this.address = address;
-        this.port = port;
+			fileHandler = new FileHandler("logs/Server Log - %u.txt");
 
-        host = new InetSocketAddress(address, port);
+			log.setUseParentHandlers(false);
+			log.addHandler(consoleHandler);
+			fileHandler.setFormatter(new SimpleFormatter());
+			log.addHandler(fileHandler);
+
+			log.setLevel(Level.FINER);
+			consoleHandler.setLevel(Level.FINER);
+			fileHandler.setLevel(Level.FINER);
+
+			host = new InetSocketAddress(address, port);
+		} catch (IOException e) {
+            throw new ExceptionInInitializerError(e);   
+        }
     }
     
     public void statusPing(int timeout) throws IOException {
@@ -50,25 +56,23 @@ public class Server {
             socket.connect(host, timeout); // 3000 is standard for timeout
             log.info("Connection to server successful!\n");
 
-			DataOutputStream output = new DataOutputStream(socket.getOutputStream());
+			ServerboundManager serverboundManager = new ServerboundManager(socket, 1);
+			ClientboundManager clientboundManager = new ClientboundManager(socket, 1, serverboundManager);
 
-            // C->S : Handshake State=1
-			output.write(Handshake.execute(address, port, 1));
-            log.fine("Handshake sent\n");
+			Thread serverbound = new Thread(serverboundManager);
+			Thread clientbound = new Thread(clientboundManager);
+
+			serverbound.start();
 
             // C->S : Request
-			output.write(Request.execute());
-            log.fine("Status request sent\n");
+			serverboundManager.execute(0x00);
 
-			Thread status = new Thread(new ClientboundManager(socket, 1));
-
-			status.start();
+			clientbound.start();
 
             // C->S : Ping
-			output.write(Ping.execute());
-            log.fine("Pinging server...");
+			serverboundManager.execute(0x01);
 
-            while(status.isAlive()) {
+            while(clientbound.isAlive() || serverbound.isAlive()) {
 				Thread.sleep(1000);
 			}
 
@@ -102,7 +106,7 @@ public class Server {
 
 		catch (NullPointerException e)
 		{
-			log.log(Level.SEVERE, "Could not get Console instance! (Password is no longer secure)", e);
+			log.log(Level.WARNING, "Could not get Console instance! (Password is no longer secure)", e);
 
 			System.out.print("Password: ");
 			passArray = Main.sc.next().toCharArray();
@@ -125,196 +129,21 @@ public class Server {
 			socket.connect(host, timeout);
 			log.info("Connection Completed!\n");
 
-			DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-			MinecraftOutputBuffer buffer = new MinecraftOutputBuffer();
+			ServerboundManager serverboundManager = new ServerboundManager(socket, 2);
+			ClientboundManager clientboundManager = new ClientboundManager(socket, 2, serverboundManager);
 
-			// C->S : Handshake State=2
-			output.write(Handshake.execute(address, port, 2));
-			log.fine("Handshake sent\n");
+			Thread serverbound = new Thread(serverboundManager);
+			Thread clientbound = new Thread(clientboundManager);
+
+			serverbound.start();
 			
 			// C->S : Login Start
-			MinecraftOutputBuffer string = new MinecraftOutputBuffer();
-			string.writeByte(0x00); //packet id
-			string.writeString(name, StandardCharsets.UTF_8);
+			serverboundManager.execute(0x00, name);
 
-			byte[] userInfo = string.getBytes();
-
-			buffer.writeVarInt(userInfo.length);
-			buffer.writeBytes(userInfo);
-
-			output.write(buffer.getBytes());
-
-			if (!address.equals("127.0.0.1"))
-			{
-				// S->C : Encryption Request
-
-				// C->S : Encryption Response
-			}
-			
-			Thread play = new Thread(new ClientboundManager(socket, 2));
-
-			play.start();
-			
-			// C->S : Plugin Message (Optional) follow up from server plugin messasge
-			/*buffer = new ByteArrayOutputStream();
-			
-			MinecraftOutputStream message = new MinecraftOutputStream(buffer);
-			message.writeByte(0x0A); //packet id
-			message.writeString("minecraft:brand", StandardCharsets.UTF_8); // identifier
-			message.writeString("vanilla", StandardCharsets.UTF_8); // data
-			
-			userInfo = buffer.toByteArray();
-
-			output.writeVarInt(userInfo.length);
-			output.writeByte(0x00); // uncompressed size
-			output.write(userInfo);
-			
-			// C->S : Client Settings
-			buffer = new ByteArrayOutputStream();
-
-			MinecraftOutputStream settings = new MinecraftOutputStream(buffer);
-			settings.writeByte(0x04); //packet id
-			settings.writeString("en_US", StandardCharsets.UTF_8);
-			settings.writeByte(0x07); // View distance
-			settings.writeVarInt(0); // chat mode 0:enabled | 1:commands only | 2:hidden
-			settings.writeByte(0x01); // colors multiplayer setting
-			settings.writeByte(0x00); // displaying skin parts
-			settings.writeVarInt(0); // Main hand 0:left | 1:right
-			
-			userInfo = buffer.toByteArray();
-
-			output.writeVarInt(userInfo.length);
-			output.writeByte(0x00); // uncompressed size
-			output.write(userInfo);
-			
-			// S->C : Player Position And Look
-			/*size = input.readVarInt();
-			packetId = input.readVarInt();
-
-			if (packetId == -1) {
-				log.severe(PREMATURE);
-			}
-
-			double x = input.readDouble();
-			double y = input.readDouble();
-			double z = input.readDouble();
-			
-			float yaw = input.readFloat();
-			float pitch = input.readFloat();*/
-			
-			/* If set, value is relative
-			X	0x01
-			Y	0x02
-			Z	0x04
-			Y_ROT	0x08
-			X_ROT	0x10*/
-			/*byte flags = input.readByte();
-			boolean[] isRelative = getBits(flags);
-			
-			int teleportID = input.readVarInt();
-
-			log.fine("Player Position and Look\n");
-			
-			log.log(Level.FINE, "X: {0}", x);
-			log.log(Level.FINE, "Y: {0}", y);
-			log.log(Level.FINE, "Z: {0}", z);
-			log.log(Level.FINE, "Yaw: {0}", yaw);
-			log.log(Level.FINE, "pitch: {0}\n", pitch);
-			
-			log.log(Level.FINE, "Flag Value: {0}", flags);
-			if (isRelative[0]) log.fine("X Position is relative");
-			if (isRelative[1]) log.fine("Y Position is relative");
-			if (isRelative[2]) log.fine("Z Position is relative");
-			if (isRelative[3]) log.fine("Y Rotation (Pitch) is relative");
-			if (isRelative[4]) log.fine("X Rotation (Yaw) is relative");
-			
-			log.log(Level.FINE, "\nTeleport ID: {0}\n", teleportID);
-			
-			// C->S : Teleport Confirm
-			buffer = new ByteArrayOutputStream();
-
-			MinecraftOutputStream telConfirm = new MinecraftOutputStream(buffer);
-			telConfirm.writeByte(0x00); // packet ID
-			telConfirm.writeVarInt(teleportID);
-			
-			userInfo = buffer.toByteArray();
-
-			output.writeVarInt(userInfo.length);
-			output.writeByte(0x00); // uncompressed size
-			output.write(userInfo);
-			
-			// C->S : Player Position and Look
-			buffer = new ByteArrayOutputStream();
-
-			MinecraftOutputStream position = new MinecraftOutputStream(buffer);
-			position.writeByte(0x11); // Packet ID
-			position.writeDouble(x);
-			position.writeDouble(y - 1.62);
-			position.writeDouble(z);
-			
-			position.writeFloat(yaw);
-			position.writeFloat(pitch);
-			
-			position.writeBoolean(true); // onGround
-			
-			userInfo = buffer.toByteArray();
-
-			output.writeVarInt(userInfo.length);
-			output.writeByte(0x00); // uncompressed size
-			output.write(userInfo);
-			
-			// C->S : Client Status
-			buffer = new ByteArrayOutputStream();
-
-			MinecraftOutputStream status = new MinecraftOutputStream(buffer);
-			status.writeByte(0x03); // Packet ID
-			status.writeVarInt(0); // 0 = respawn | 1 = statistic menu opened
-			
-			userInfo = buffer.toByteArray();
-
-			output.writeVarInt(userInfo.length);
-			output.writeByte(0x00); // uncompressed size
-			output.write(userInfo);
-			
-			// S->C : The rest of the data
-			/*size = Protocol.readVarInt(input);
-			uncompressedSize = Protocol.readVarInt(input);
-			int resultLength;
-			byte[] result = new byte[uncompressedSize];
-			byte[] compressedData = new byte[size];
-			if (uncompressedSize > 0)
-			{
-				input.readFully(compressedData);
-				
-				//for (byte b: compressedData) System.out.print(b + " ");
-				
-				Inflater decompresser = new Inflater();
-				decompresser.setInput(compressedData, 0, size);
-				try {
-					resultLength = decompresser.inflate(result);
-					
-					//if (resultLength != uncompressedSize) throw new RuntimeException("Uncompression failed! Length not equal");
-				} catch (DataFormatException e) {
-					e.printStackTrace();
-				}
-				decompresser.end();
-			}
-			DataInputStream uncompressedData = new DataInputStream(new ByteArrayInputStream(result));
-			
-			packetId = Protocol.readVarInt(uncompressedData);
-			
-			log.log(Level.FINE, "Size: {0}", size);
-			log.log(Level.FINE, "Uncompressed Size: {0}", uncompressedSize);
-			System.out.print("Packet Id: " );
-			System.out.format("0x%02X", (byte) packetId);
-			System.out.println();
-
-			if (packetId == -1) {
-				log.severe(PREMATURE);
-			}*/
+			clientbound.start();
 
 			// Keep main thread stuck in a loop to not kill socket while other thread is running
-			while(play.isAlive()) {
+			while(clientbound.isAlive() || serverbound.isAlive()) {
 				Thread.sleep(1000);
 			}
 		} catch (InterruptedException e) {

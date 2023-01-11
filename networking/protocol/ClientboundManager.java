@@ -19,19 +19,23 @@ public class ClientboundManager implements Runnable {
 
     private int state;
 
-    public ClientboundManager(Socket socket, int state) throws IOException {
+    private final ServerboundManager serverboundManager;
+    private final ClientboundPacket packet;
+
+    public ClientboundManager(Socket socket, int state, ServerboundManager serverboundManager) throws IOException {
         this.socket = socket;
 
         in = new DataInputStream(socket.getInputStream());
 
         this.state = state;
+
+        this.serverboundManager = serverboundManager;
+
+        packet = new ClientboundPacket(state, serverboundManager);
     }
 
     @Override
     public void run() {
-
-        ClientboundPacket packet = new ClientboundPacket(state);
-
         while (!socket.isClosed()) {
 
             MinecraftInputBuffer buffer = null;
@@ -48,7 +52,8 @@ public class ClientboundManager implements Runnable {
                 packet.execute(buffer, packetId);
 
                 if (state == 2 && packetId == 0x02) {
-                    packet.setState(3);
+                    setState(3);
+                    serverboundManager.setState(3);
                 }
 
             } catch (EOFException e) {
@@ -74,5 +79,10 @@ public class ClientboundManager implements Runnable {
         }
 
         log.fine("Connection lost!");
-    }  
+    }
+
+    public void setState(int state) {
+        this.state = state;
+        packet.setState(state);
+    }
 }

@@ -46,7 +46,7 @@ public class ClientboundPacket {
             err.addHandler(fileErrHandler);
 
             log.setLevel(Level.FINER);
-            consoleHandler.setLevel(Level.FINER);
+            consoleHandler.setLevel(Level.FINE);
             fileHandler.setLevel(Level.FINER);
 
             err.setLevel(Level.WARNING);
@@ -58,9 +58,12 @@ public class ClientboundPacket {
     }
 
     private int state;
+    
+    private final ServerboundManager serverboundManager;
 
-    public ClientboundPacket(int state) {
+    public ClientboundPacket(int state, ServerboundManager serverboundManager) {
         this.state = state;
+        this.serverboundManager = serverboundManager;
     }
 
     public void execute(MinecraftInputBuffer buffer, int packetId) throws IOException {
@@ -74,7 +77,7 @@ public class ClientboundPacket {
                 break;
 
             case 3:
-                Play.getById(packetId).execute(buffer);
+                Play.getById(packetId).execute(buffer, serverboundManager);
                 break;
 
             default:
@@ -86,12 +89,12 @@ public class ClientboundPacket {
         this.state = state;
     }
 
-    enum Status {
+    public enum Status {
         RESPONSE(0x00, Response.class),
         PONG(0x01, Pong.class);
 
         private final int id;
-        private Class<?> clazz;
+        private final Class<?> clazz;
 
         private static final Status[] BY_ID = values();
 
@@ -135,7 +138,7 @@ public class ClientboundPacket {
         }
     }
 
-    enum Login {
+    public enum Login {
         DISCONNECT(0x00, Disconnect.class),
         ENCRYPTION_REQUEST(0x01, EncryptionRequest.class),
         LOGIN_SUCCESS(0x02, LoginSuccess.class),
@@ -144,7 +147,7 @@ public class ClientboundPacket {
 
 
         private final int id;
-        private Class<?> clazz;
+        private final Class<?> clazz;
 
         private static final Login[] BY_ID = values();
 
@@ -188,7 +191,7 @@ public class ClientboundPacket {
         }
     }
 
-    enum Play {
+    public enum Play {
         SPAWN_ENTITY(0x00, SpawnEntity.class),
         SPAWN_XP_ORB(0x01, SpawnXPOrb.class),
         SPAWN_LIVING_ENTITY(0x02, SpawnLivingEntity.class),
@@ -220,7 +223,7 @@ public class ClientboundPacket {
         UNLOAD_CHUNK(0x1C, UnloadChunk.class),
         CHANGE_GAME_STATE(0x1D, ChangeGameState.class),
         OPEN_HORSE_WINDOW(0x1E, OpenHorseWindow.class),
-        KEEP_ALIVE(0x1F, KeepAlive.class),
+        KEEP_ALIVE(0x1F, KeepAlive.class, true),
         CHUNK_DATA(0x20, ChunkData.class),
         EFFECT(0x21, Effect.class),
         PARTICLE(0x22, Particle.class),
@@ -283,7 +286,8 @@ public class ClientboundPacket {
         TAGS(0x5B, Tags.class);
 
         private final int id;
-        private Class<?> clazz;
+        private final Class<?> clazz;
+        private final boolean hasResponse;
 
         private static final Play[] BY_ID = values();
 
@@ -298,25 +302,38 @@ public class ClientboundPacket {
         }
 
         Play(int id, Class<?> clazz) {
+            this(id, clazz, false);
+        }
+
+        Play(int id, Class<?> clazz, boolean hasResponse) {
             this.id = id;
             this.clazz = clazz;
+            this.hasResponse = hasResponse;
         }
 
         public int getId() {
             return id;
         }
 
-        public void execute(MinecraftInputBuffer buffer) throws IOException{
+        public void execute(MinecraftInputBuffer buffer, ServerboundManager serverboundManager) throws IOException{
             if (clazz == null) {
                 throw new IOException(CLASS_NONEXIST + Integer.toHexString(id).toUpperCase());
             }
 
             try {
                 log.log(Level.FINE, "Class {0} being executed", clazz.getName());
-                Method method = clazz.getMethod("execute", MinecraftInputBuffer.class);
 
-                // Call null because method is static
-                method.invoke(null, buffer);
+                if (hasResponse) {
+                    Method method = clazz.getMethod("execute", MinecraftInputBuffer.class, ServerboundManager.class);
+
+                    // Call null because method is static
+                    method.invoke(null, buffer, serverboundManager);
+                } else {
+                    Method method = clazz.getMethod("execute", MinecraftInputBuffer.class);
+
+                    // Call null because method is static
+                    method.invoke(null, buffer);
+                }
             } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e) {
                 throw new IOException("Error on Invoking method!", e);
             } catch (InvocationTargetException e) {

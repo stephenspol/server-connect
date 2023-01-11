@@ -172,7 +172,7 @@ public class MinecraftInputBuffer {
     }
 
 
-	public final Tag readNBT() throws IOException {
+	public final Tag<?> readNBT() throws IOException {
 		return readTag(0);
 	}
 

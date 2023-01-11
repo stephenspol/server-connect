@@ -64,19 +64,16 @@ public class ServerboundPacket {
         this.state = state;
     }
 
-    public void execute(int packetId, Object... params) throws IOException {
+    public byte[] execute(int packetId, Object... params) throws IOException {
         switch (state) {
             case 1:
-                Status.getById(packetId).execute();
-                break;
+                return Status.getById(packetId).execute();
 
             case 2:
-                Login.getById(packetId).execute(params);
-                break;
+                return Login.getById(packetId).execute(params);
 
             case 3:
-                Play.getById(packetId).execute(params);
-                break;
+                return Play.getById(packetId).execute(params);
 
             default:
                 throw new IllegalArgumentException("State " + state + " is a invalid!");
@@ -87,7 +84,7 @@ public class ServerboundPacket {
         this.state = state;
     }
 
-    enum Status {
+    public enum Status {
         REQUEST(0x00, Request.class),
         PING(0x01, Ping.class);
 
@@ -105,7 +102,7 @@ public class ServerboundPacket {
             return id;
         }
 
-        public void execute() throws IOException{
+        public byte[] execute() throws IOException{
             if (cls == null) {
                 throw new IOException(CLASS_NONEXIST + Integer.toHexString(id).toUpperCase());
             }
@@ -115,7 +112,7 @@ public class ServerboundPacket {
                 Method method = cls.getMethod("execute");
 
                 // Call null because method is static
-                method.invoke(null);
+                return (byte[]) method.invoke(null);
             } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e) {
                 throw new IOException("Error on Invoking method!", e);
             } catch (InvocationTargetException e) {
@@ -136,8 +133,8 @@ public class ServerboundPacket {
         }
     }
 
-    enum Login {
-        LOGIN_START(0x00, LoginStart.class),
+    public enum Login {
+        LOGIN_START(0x00, LoginStart.class, String.class),
         ENCRYPTION_RESPONSE(0x01, EncryptionResponse.class, byte.class, byte.class),
         LOGIN_PLUGIN_RESPONSE(0x02, LoginPluginResponse.class, int.class, byte.class);
 
@@ -157,17 +154,9 @@ public class ServerboundPacket {
             return id;
         }
 
-        public void execute(Object... params) throws IOException{
+        public byte[] execute(Object... params) throws IOException{
             if (cls == null) {
                 throw new IOException(CLASS_NONEXIST + Integer.toHexString(id).toUpperCase());
-            }
-
-            if (params.length != args.length) throw new IOException("Too many or not enough arguments");
-
-            for (int i = 0; i < args.length; i++) {
-                if (args[i].isInstance(params[i])) continue;
-
-                throw new IOException("Parameter " + params[i] + " is not a instance of " + args[i]);
             }
 
             try {
@@ -175,7 +164,7 @@ public class ServerboundPacket {
                 Method method = cls.getMethod("execute", args);
 
                 // Call null because method is static
-                method.invoke(null, params);
+                return (byte[]) method.invoke(null, params);
             } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e) {
                 throw new IOException("Error on Invoking method!", e);
             } catch (InvocationTargetException e) {
@@ -196,7 +185,7 @@ public class ServerboundPacket {
         }
     }
 
-    enum Play {
+    public enum Play {
         TELEPORT_CONFIRM(0x00, TeleportConfirm.class, int.class),
         QUERY_BLOCK_NBT(0x01, QueryBlockNBT.class, int.class, int[].class),
         SET_DIFFICULTY(0x02, SetDifficulty.class, byte.class),
@@ -263,17 +252,9 @@ public class ServerboundPacket {
             return id;
         }
 
-        public void execute(Object... params) throws IOException{
+        public byte[] execute(Object... params) throws IOException{
             if (cls == null) {
                 throw new IOException(CLASS_NONEXIST + Integer.toHexString(id).toUpperCase());
-            }
-
-            if (params.length != args.length) throw new IOException("Too many or not enough arguments");
-
-            for (int i = 0; i < args.length; i++) {
-                if (args[i].isInstance(params[i])) continue;
-
-                throw new IOException("Parameter " + params[i] + " is not a instance of " + args[i]);
             }
 
             try {
@@ -281,7 +262,7 @@ public class ServerboundPacket {
                 Method method = cls.getMethod("execute", args);
 
                 // Call null because method is static
-                method.invoke(null, params);
+                return (byte[]) method.invoke(null, params);
             } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException e) {
                 throw new IOException("Error on Invoking method!", e);
             } catch (InvocationTargetException e) {
