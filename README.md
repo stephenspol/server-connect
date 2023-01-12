@@ -37,7 +37,8 @@ and open the file named `eula.txt` that is in the same directory. Change the lin
 and save to agree to the eula.
 6. Open another file called `server.properties`. Here you can change many configurations for the server such as
 your port. We will be looking for the configuration `online-mode`. This is important as server-connect cannot do 
-encryption yet. Change `online-mode:true` to `online-mode:false` and save.
+encryption yet. Change `online-mode:true` to `online-mode:false`. Look for `network-compression-threshold` and change
+the value to -1 to disable compression. This app currently does not support compression either.
 7. Finally, run this command: `java -Xmx1024M -Xms1024 -jar server.jar --nogui`. `Xmx` flag is for max memory
 size and `Xms` flag is initial memory size. `nogui` flag prevents the gui from opening. All flags are optional
 except for the `jar` flag.
@@ -61,7 +62,7 @@ except for the `jar` flag.
 ### Connection with Server
 | Implemented             | Feature               | Stage            |
 |-------------------------|-----------------------|------------------|
-| :white_check_mark:      | Compression           | Developed        |
+| :x:                     | Compression           | Planned          |
 | :x:                     | Encryption            | Planned          |
 | :ballot_box_with_check: | ClientBound Protocols | Late Development |
 | :white_check_mark:      | ServerBound Protocols | Developed        |
