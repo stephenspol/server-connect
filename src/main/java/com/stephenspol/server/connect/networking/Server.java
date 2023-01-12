@@ -88,7 +88,7 @@ public class Server {
 
         Console console = System.console();
 
-        Authentication user;
+        Authentication authentication;
 		String name;
 
         System.out.print("Username (Email if mitagated): ");
@@ -106,7 +106,7 @@ public class Server {
 
 		catch (NullPointerException e)
 		{
-			log.log(Level.WARNING, "Could not get Console instance! (Password is no longer secure)", e);
+			log.warning("Could not get Console instance! (Password is no longer secure)");
 
 			System.out.print("Password: ");
 			passArray = Main.sc.next().toCharArray();
@@ -116,42 +116,46 @@ public class Server {
 
 		finally
 		{
-			user = new Authentication(username, passArray);
+			authentication = new Authentication(username, passArray);
 		}
 
-		name = user.getName();
+		boolean authenticated = authentication.connect();
 
-        log.info("Starting Login\n");
+		if (authenticated) {
+			name = authentication.getName();
 
-		try  (final Socket socket = new Socket())
-		{
-			log.fine("Attempting to connect to server...");
-			socket.connect(host, timeout);
-			log.info("Connection Completed!\n");
+			log.info("Starting Login\n");
 
-			ServerboundManager serverboundManager = new ServerboundManager(socket, 2);
-			ClientboundManager clientboundManager = new ClientboundManager(socket, 2, serverboundManager);
+			try (final Socket socket = new Socket()) {
+				log.fine("Attempting to connect to server...");
+				socket.connect(host, timeout);
+				log.info("Connection Completed!\n");
 
-			Thread serverbound = new Thread(serverboundManager);
-			Thread clientbound = new Thread(clientboundManager);
+				ServerboundManager serverboundManager = new ServerboundManager(socket, 2);
+				ClientboundManager clientboundManager = new ClientboundManager(socket, 2, serverboundManager);
 
-			serverbound.start();
-			
-			// C->S : Login Start
-			serverboundManager.execute(0x00, name);
+				Thread serverbound = new Thread(serverboundManager);
+				Thread clientbound = new Thread(clientboundManager);
 
-			clientbound.start();
+				serverbound.start();
 
-			// Keep main thread stuck in a loop to not kill socket while other thread is running
-			while(clientbound.isAlive() || serverbound.isAlive()) {
-				Thread.sleep(1000);
+				// C->S : Login Start
+				serverboundManager.execute(0x00, name);
+
+				clientbound.start();
+
+				// Keep main thread stuck in a loop to not kill socket while other thread is running
+				while (clientbound.isAlive() || serverbound.isAlive()) {
+					Thread.sleep(1000);
+				}
+			} catch (InterruptedException e) {
+				log.log(Level.WARNING, "Thread Interrupted", e);
+
+				Thread.currentThread().interrupt();
 			}
-		} catch (InterruptedException e) {
-			log.log(Level.WARNING, "Thread Interrupted", e);
-			
-			Thread.currentThread().interrupt();
+		} else {
+			log.severe("Failed to authenticate user!");
 		}
-
     }
 
 	public static boolean getBit(byte num, int pos)

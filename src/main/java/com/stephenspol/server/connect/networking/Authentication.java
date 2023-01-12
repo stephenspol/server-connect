@@ -21,6 +21,7 @@ public class Authentication {
 	
 	private Logger log;
 	private File file;
+	private boolean fileCreated;
 	private static final String FILE_PATH = "Tokens.txt";
 	
 	private static final String TYPE_JSON = "application/json";
@@ -44,21 +45,26 @@ public class Authentication {
 
 		consoleHandler.setLevel(Level.FINE);
 
-		username = user.toLowerCase().trim(); // Make username standerized
+		username = user.toLowerCase().trim(); // Make username standardized
 		password = pswd;
 		
 		sessionServer = new URL("https://sessionserver.mojang.com/session/minecraft/join");
 		
 		file = new File(FILE_PATH);
 		
-		boolean fileCreated = file.createNewFile();
+		fileCreated = file.createNewFile();
 
 		log.log(Level.FINE, "Created new file at {0}: {1}", new Object[] {FILE_PATH, fileCreated});
+
+	}
+
+	public boolean connect() throws IOException {
+		boolean authenticated = false;
 
 		// Need to create Access Token
 		if (fileCreated)
 		{
-			authenticate();
+			authenticated = authenticate();
 		}
 
 		else
@@ -67,18 +73,16 @@ public class Authentication {
 
 			if (data[1].equals(""))
 			{
-				authenticate();
-
-				data = readFromFile();
-
-				validate(data[1]);
+				authenticated = authenticate();
 			}
 
-			if (!validate(data[1]))
+			else if (!validate(data[1]))
 			{
-				refresh(data[1], data[2]);
+				authenticated = refresh(data[1], data[2]);
 			}
 		}
+
+		return authenticated;
 	}
 	
 	public boolean authenticate() throws IOException
