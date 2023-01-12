@@ -1,2 +1,8 @@
 Tokens.txt
-logs
+logs/
+
+.idea
+
+# Maven
+target/
+classes/
