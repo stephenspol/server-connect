@@ -122,39 +122,44 @@ public class Server {
 		boolean authenticated = authentication.connect();
 
 		if (authenticated) {
+			log.info("Authentication successful!");
 			name = authentication.getName();
-
-			log.info("Starting Login\n");
-
-			try (final Socket socket = new Socket()) {
-				log.fine("Attempting to connect to server...");
-				socket.connect(host, timeout);
-				log.info("Connection Completed!\n");
-
-				ServerboundManager serverboundManager = new ServerboundManager(socket, 2);
-				ClientboundManager clientboundManager = new ClientboundManager(socket, 2, serverboundManager);
-
-				Thread serverbound = new Thread(serverboundManager);
-				Thread clientbound = new Thread(clientboundManager);
-
-				serverbound.start();
-
-				// C->S : Login Start
-				serverboundManager.execute(0x00, name);
-
-				clientbound.start();
-
-				// Keep main thread stuck in a loop to not kill socket while other thread is running
-				while (clientbound.isAlive() || serverbound.isAlive()) {
-					Thread.sleep(1000);
-				}
-			} catch (InterruptedException e) {
-				log.log(Level.WARNING, "Thread Interrupted", e);
-
-				Thread.currentThread().interrupt();
-			}
 		} else {
-			log.severe("Failed to authenticate user!");
+			log.warning("Failed to authenticate user! Will attempt to connect to server as OFFLINE MODE!");
+			System.out.print("Username: ");
+			username = Main.sc.next();
+
+			name = username;
+		}
+
+		log.info("Starting Login\n");
+
+		try (final Socket socket = new Socket()) {
+			log.fine("Attempting to connect to server...");
+			socket.connect(host, timeout);
+			log.info("Connection Completed!\n");
+
+			ServerboundManager serverboundManager = new ServerboundManager(socket, 2);
+			ClientboundManager clientboundManager = new ClientboundManager(socket, 2, serverboundManager);
+
+			Thread serverbound = new Thread(serverboundManager);
+			Thread clientbound = new Thread(clientboundManager);
+
+			serverbound.start();
+
+			// C->S : Login Start
+			serverboundManager.execute(0x00, name);
+
+			clientbound.start();
+
+			// Keep main thread stuck in a loop to not kill socket while other thread is running
+			while (clientbound.isAlive() || serverbound.isAlive()) {
+				Thread.sleep(1000);
+			}
+		} catch (InterruptedException e) {
+			log.log(Level.WARNING, "Thread Interrupted", e);
+
+			Thread.currentThread().interrupt();
 		}
     }
 
