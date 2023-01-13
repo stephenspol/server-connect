@@ -10,7 +10,7 @@ to connect to a Minecraft server without having to run a Minecraft client.
 
 ### Requirements
 - Operating System - Windows (Not tested on other platforms but most likely works)
-- Java 11 64-bit or later
+- Java 17 64-bit or later
 - Maven 3.x.x (from your package manager on Linux / OSX
   ([Homebrew](https://github.com/Homebrew/brew)) or
   [from the jar](https://maven.apache.org/install.html) for any OS)
@@ -38,7 +38,7 @@ and save to agree to the eula.
 6. Open another file called `server.properties`. Here you can change many configurations for the server such as
 your port. We will be looking for the configuration `online-mode`. This is important as server-connect cannot do 
 encryption yet. Change `online-mode:true` to `online-mode:false`. Look for `network-compression-threshold` and change
-the value to -1 to disable compression. This app currently does not support compression either.
+the value to -1 to disable compression. This app currently does not support compression either. Save the file.
 7. Finally, run this command: `java -Xmx1024M -Xms1024 -jar server.jar --nogui`. `Xmx` flag is for max memory
 size and `Xms` flag is initial memory size. `nogui` flag prevents the gui from opening. All flags are optional
 except for the `jar` flag.
