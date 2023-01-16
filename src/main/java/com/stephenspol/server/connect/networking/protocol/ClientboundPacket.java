@@ -46,7 +46,7 @@ public class ClientboundPacket {
             err.addHandler(fileErrHandler);
 
             log.setLevel(Level.FINER);
-            consoleHandler.setLevel(Level.FINE);
+            consoleHandler.setLevel(Level.INFO);
             fileHandler.setLevel(Level.FINER);
 
             err.setLevel(Level.WARNING);

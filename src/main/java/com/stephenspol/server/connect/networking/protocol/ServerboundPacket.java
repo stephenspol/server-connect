@@ -47,7 +47,7 @@ public class ServerboundPacket {
             err.addHandler(fileErrHandler);
 
             log.setLevel(Level.FINER);
-            consoleHandler.setLevel(Level.FINER);
+            consoleHandler.setLevel(Level.INFO);
             fileHandler.setLevel(Level.FINER);
 
             err.setLevel(Level.WARNING);
