@@ -28,19 +28,9 @@ public class MinecraftInputBuffer {
     }
 
     public MinecraftInputBuffer(DataInputStream in) throws IOException {
-        int i = 0;
-	    int j = 0;
-	    while (true) {
-	        int k = in.read();
-            if (k == -1) throw new EOFException("Stream Ended!");
-	        i |= (k & 0x7F) << j++ * 7;
-	        if (j > 5) throw new IOException("VarInt too big!");
-	        if ((k & 0x80) != 128) break;
-	    }
-
-        if (i < 0) throw new IOException("Premature stream. Size is: " + i);
+        int packetSize = readPacketSize(in);
 	    
-        buffer = new byte[i];
+        buffer = new byte[packetSize];
 
         in.readFully(buffer);
 
@@ -629,5 +619,21 @@ public class MinecraftInputBuffer {
         int remainingSize = (size() - 1) - pos;
         
         return readBytes(remainingSize);
+    }
+
+    private int readPacketSize(DataInputStream in) throws IOException {
+        int i = 0;
+        int j = 0;
+        while (true) {
+            int k = in.read();
+            if (k == -1) throw new EOFException("Stream Ended!");
+            i |= (k & 0x7F) << j++ * 7;
+            if (j > 5) throw new IOException("VarInt too big!");
+            if ((k & 0x80) != 128) break;
+        }
+
+        if (i < 0) throw new IOException("Premature stream. Size is: " + i);
+
+        return i;
     }
 }
