@@ -4,10 +4,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 import com.stephenspol.server.connect.networking.protocol.serverbound.handshake.Handshake;
@@ -33,7 +31,7 @@ public class ServerboundManager implements Runnable {
 
         this.state = state;
 
-        packetBuffer = new LinkedHashMap<>(); 
+        packetBuffer = new ConcurrentHashMap<>();
         
         packet = new ServerboundPacket(state);
     }
@@ -53,17 +51,9 @@ public class ServerboundManager implements Runnable {
 
             byte[] payload = null;
 
-            Map<Integer, Object[]> tempPacketBuffer = new LinkedHashMap<>(packetBuffer);
+            for (Map.Entry<Integer, Object[]> entry : packetBuffer.entrySet()) {
 
-            packetBuffer.clear();
-
-            Iterator<Entry<Integer, Object[]>> packetIterator = tempPacketBuffer.entrySet().iterator();
-            packetBuffer.clear();
-
-            while (packetIterator.hasNext()) {
                 try {
-                    Entry<Integer, Object[]> entry = packetIterator.next();
-
                     packetId = entry.getKey();
 
                     payload = packet.execute(packetId, entry.getValue());
@@ -76,9 +66,11 @@ public class ServerboundManager implements Runnable {
                     err.log(Level.SEVERE, "A IOException has occured!\n", e);
 
                     if (payload != null) {
-                        err.log(Level.WARNING, "Packet Dump of packetID {0}: {1}", 
+                        err.log(Level.WARNING, "Packet Dump of packetID {0}: {1}",
                                 new Object[]{"0x" + Integer.toHexString(packetId).toUpperCase(), Arrays.toString(payload)});
                     }
+                } finally {
+                    packetBuffer.remove(packetId);
                 }
             }
         }
